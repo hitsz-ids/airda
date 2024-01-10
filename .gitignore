@@ -1,0 +1,10 @@
+# IDE cache
+.idea
+.vscode
+
+#Python cache
+**/__pycache__/**
+
+
+# Env
+.env
