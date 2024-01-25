@@ -1,8 +1,8 @@
 # SQLAGENT
-## 总览
 
 <img src="/asset/robot.jpeg" width = "300" height = "300" alt="图片名称" align=center />
 
+## 总览
 SQLAgent 是一个 **开源的（Open source）、大模型驱动的（LLM-Powered）、专注于私有化部署的Text2SQL 智能体（Agent）** 项目（Project），我们的目标是提供产品级的Text2SQL解决方案，致力于解决Text2SQL在实际应用中遇到的各种问题如模型私有化部署、面向Text2SQL任务的RAG最佳方案等等。为此，我们将持续探索什么是Text2SQL在实际应用中的最佳实践。
 > SQLAgent可以简单的理解为Text2SQL + LLM-Powered Agent，是大模型驱动的面向Text2SQL任务的智能体。基于SQLAgent，你可以通过只调用几个服务接口来快速的开发属于自己的Text2SQL产品，且你只需要专注于你的业务应用，SQLAgent会以一种经过实验数据证明是最合理的方式来帮你解决那些关于Text2SQL的技术难题。
 > Text2SQL（Text-to-SQL），顾名思义，即将自然语言转化为SQL，更为学术的定义是将以自然语言表达的数据库领域的问题转化为可执行的结构化查询语句。
