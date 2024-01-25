@@ -6,7 +6,7 @@
 SQLAgent 是一个 **开源的（Open source）、大模型驱动的（LLM-Powered）、专注于私有化部署的Text2SQL 智能体（Agent）** 项目（Project），我们的目标是提供产品级的Text2SQL解决方案，致力于解决Text2SQL在实际应用中遇到的各种问题如模型私有化部署、面向Text2SQL任务的RAG最佳方案等等。为此，我们将持续探索什么是Text2SQL在实际应用中的最佳实践。
 > SQLAgent可以简单的理解为Text2SQL + LLM-Powered Agent，是大模型驱动的面向Text2SQL任务的智能体。基于SQLAgent，你可以通过只调用几个服务接口来快速的开发属于自己的Text2SQL产品，且你只需要专注于你的业务应用，SQLAgent会以一种经过实验数据证明是最合理的方式来帮你解决那些关于Text2SQL的技术难题。
 > Text2SQL（Text-to-SQL），顾名思义，即将自然语言转化为SQL，更为学术的定义是将以自然语言表达的数据库领域的问题转化为可执行的结构化查询语句。
-> Agent，在本项目中更准确的叫法是LLM-Powered Agent，即⼤语⾔模型驱动的智能代理，是以LLM 作为⼤脑，可感知环境，具备任务规划、记忆、工具调用等能力的一组计算机程序（参考 https://lilianweng.github.io/posts/2023-06-23-agent/）。
+> Agent，在本项目中更准确的叫法是LLM-Powered Agent，即⼤语⾔模型驱动的智能代理，是以LLM 作为⼤脑，可感知环境，具备任务规划、记忆、工具调用等能力的一组计算机程序（参考 https://lilianweng.github.io/posts/2023-06-23-agent/ ）。
 ## 为什么选择SQLAgent
 与那些Text2SQL开发框架（Text2SQL Framework）、具备大模型聊天功能的数据库客户端等项目不同的是，SQLAgent项目的目标是一个支持完全私有化部署、专门面向Text2SQL任务的智能体，这意味着基于SQLAgent来开发产品你将 **无需收集数据来微调模型、无需开展繁琐的Prompt工程、无需关心如何组织数据来实现RAG、更无需关心大模型的Token费用等等问题** ，因为这一切都是由SQLAgent来提供。你可以将SQLAgent当做一个真正SQL专家，尽管问它问题即可！
 
