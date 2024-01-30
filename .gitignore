@@ -8,3 +8,4 @@
 
 # Env
 .env
+venv/

@@ -31,7 +31,7 @@ SQLAgent 是一个 **开源的（Open source）、大模型驱动的（LLM-Power
 - **图表生成**：根据SQL查询的结果动态生成图表。
 
 ## 推理性能
-![performance image](/asset/performance.png)  
+![performance image](/asset/performance.png)
 
 ## 在线演示系统
 即将上线、敬请期待.....
@@ -43,28 +43,28 @@ CPU：8核
 内存：32GB+
 #### 环境要求
 项目存储依赖mongodb，在开始安装之前需要提前安装
-#### 源码部署  
+#### 源码部署
 
-> SQLAgent依赖Python >= 3.9  
+> SQLAgent依赖Python >= 3.9
 
-1、[可选] 创建conda环境  
+1、[可选] 创建conda环境
 
     conda create -n sqlagent python=3.9
     conda activate sqlagent
 
-2、可以通过运行以下命令来下载源码和安装依赖：  
+2、可以通过运行以下命令来下载源码和安装依赖：
 
     #源码下载
-    git clone https://github.com/hitsz-ids/SQLAgent.git``  
-    cd SQLAgent 
+    git clone https://github.com/hitsz-ids/SQLAgent.git``
+    cd SQLAgent
     # 安装依赖
     pip install -r requirements.txt
 
-3、创建``.env``文件，可以从``.env_template``文件复制  
+3、创建``.env``文件，可以从``.env_template``文件复制
 
     cp .env_template .env
 
-4、请根据实际情况对以下变量进行配置  
+4、请根据实际情况对以下变量进行配置
 
     # mongodb 配置
     MONGODB_URI="mongodb://localhost:27017"
@@ -79,27 +79,27 @@ CPU：8核
     # [可选]embedding 模型名称 默认使用 infgrad/stella-large-zh-v2
     EMBEDDINGS_MODEL_NAME='infgrad/stella-large-zh-v2'
 
-5、启动服务  
+5、启动服务
 
     python sqlagent/server.py
 
 #### Docker部署
 
-1、构建镜像  
+1、构建镜像
 
     bash docker/build.sh
 
-2、创建embedding模型存储目录  
+2、创建embedding模型存储目录
 
     mkdir -p /data/huggingface
 
-3、启动容器  
+3、启动容器
 
     docker run -idt --privileged=true \
     -p 8888:8888 \
     -v /data/huggingface:/root/.cache/huggingface \
     -e LLM_SQL_ORIGIN=http://xxx.xxx.xxx.xxx:8000 \ # 按实际情况替换
-    -e MONGODB_URI=mongodb://xxx.xxx.xxx.xxx:27017 \ # 按实际情况替换 
+    -e MONGODB_URI=mongodb://xxx.xxx.xxx.xxx:27017 \ # 按实际情况替换
     -e MONGODB_DB_NAME=sqlagent \
     -e MONGODB_DB_USERNAME=xxx \ # 按实际情况替换
     -e MONGODB_DB_PASSWORD=xxx \ # 按实际情况替换
@@ -110,16 +110,16 @@ CPU：8核
 
 ### 模型部署
 #### 资源要求
-- CPU：8核 
-- 内存：32GB+ 
+- CPU：8核
+- 内存：32GB+
 - GPU：80G
 
 1、下载模型文件
 > 下载地址，敬请期待
 
-2、部署模型  
+2、部署模型
 
-这里展示使用FastChat来部署模型服务  
+这里展示使用FastChat来部署模型服务
 > 需要根据现实情况手动修改下列配置项：
 {PATH_TO_SQL_MODEL_DIR} 需要替换成步骤1模型文件的下载地址
 {MODEL_NAME} 是你希望暴露的模型调用的名称，使用接口调用部署了多个模型的服务时，可用此参数区分
@@ -141,7 +141,7 @@ CPU：8核
 
 
 ### 对你的数据库进行提问
-1、训练你的数据库  
+1、训练你的数据库
 
     curl -X 'POST' \
     'http://localhost/v1/instruction/sync' \
@@ -152,7 +152,7 @@ CPU：8核
     "table_names": ["table_name"]
     }'
 
-2、训练你的知识库  
+2、训练你的知识库
 
     curl -X 'POST' \
     'http://localhost/v1/knowledge/train' \
@@ -173,4 +173,3 @@ CPU：8核
     -d '{
     "model": "sql_model",
     "messages": [{"role":"user","content":"自然语言问题"}],
-        
