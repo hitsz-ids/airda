@@ -1,6 +1,7 @@
 # IDE cache
 .idea
 .vscode
+.DS_Store
 
 #Python cache
 **/__pycache__/**
