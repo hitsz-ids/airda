@@ -6,7 +6,6 @@ uvicorn
 python-dotenv
 shortuuid
 torch
-chromadb
 sentence-transformers
 unstructured
 python-docx

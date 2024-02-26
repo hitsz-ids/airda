@@ -3,9 +3,10 @@
 .vscode
 
 #Python cache
-**/__pycache__/**
-
+**/__pycache__
 
 # Env
 .env
 venv/
+
+test/
