@@ -12,5 +12,4 @@ unstructured
 python-docx
 bson
 httpx==0.24.1
-redis
 pymongo==4.4.0
