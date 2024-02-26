@@ -1,22 +1,20 @@
 from typing import Generator
 
-from framework.assistant.base import Assistant
+from sql_agent.framework.assistant.base import Assistant
 
 
 class Task:
-    _steps: Assistant
+    _steps: list[Assistant]
+    _question: str = ""
 
-    def __init__(self, steps: Assistant, size: int):
+    def __init__(self, question: str, steps: list[Assistant]):
         self._steps = steps
-        self._size = size
-        next(self._steps)
-        pass
+        self._question = question
 
-    def next(self):
-        try:
-            next(self._steps)
-        except StopIteration:
-            self.stop()
+    def execute(self) -> Generator:
+        for item in self._steps:
+            for action_result in item.run(self._question):
+                yield action_result
 
     def stop(self):
-        self._steps.close()
+        pass

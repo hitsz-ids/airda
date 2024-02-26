@@ -1,37 +1,37 @@
 from abc import abstractmethod
-from typing import Type
+from typing import Generator
 
-from framework.assistant.action import ActionStatus
-from framework.assistant.action.base import Action
+from sql_agent.framework.assistant.action import ActionStatus
+from sql_agent.framework.assistant.action.base import Action
 
 
 class Assistant:
-    _actions: list[Type[Action]]
-    _current: int
+    _actions: list[type[Action]]
+    _currentActionIndex: int
     _question: str
+
     def __init__(self):
-        self._actions = self.initActions()
+        self._actions = self.init_actions()
 
     @abstractmethod
-    def initActions(self) -> list[Type[Action]]:
+    def init_actions(self) -> list[type[Action]]:
         pass
 
-    def run(self, question: str):
+    def run(self, question: str) -> Generator:
         size = len(self._actions)
         for i in range(size):
-            i = yield i
-            action = self._actions[i]()
-            self._current = action
+            action = self._actions[i](question)
+            self._currentActionIndex = i
             self.prepare(action)
             action.execute()
+            yield action.get_result()
             intercepted = self.complete(action)
             if intercepted:
                 break
 
     def prepare(self, action: Action):
         self.before(action)
-        action.setStatus(ActionStatus.RUNNING)
-        pass
+        action.set_status(ActionStatus.RUNNING)
 
     @abstractmethod
     def before(self, action: Action):
@@ -46,5 +46,5 @@ class Assistant:
             self.after(action)
         except Exception:
             pass
-        action.setStatus(ActionStatus.COMPLETE)
+        action.set_status(ActionStatus.COMPLETE)
         return False

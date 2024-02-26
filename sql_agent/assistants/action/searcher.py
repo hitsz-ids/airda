@@ -1,8 +1,8 @@
-from framework.assistant.action.base import Action
+from sql_agent.framework.assistant.action.base import Action
 
 
 class Searcher(Action):
-    def initName(self):
+    def init_name(self):
         return "搜索对应的表信息"
 
     def execute(self):

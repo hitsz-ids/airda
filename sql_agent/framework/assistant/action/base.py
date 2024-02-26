@@ -1,32 +1,30 @@
 from abc import abstractmethod, ABC
-
-from framework.assistant.action import ActionStatus
+from sql_agent.framework.assistant.action import ActionStatus
 
 
 class Action:
-    _result: str
-    _question: str
-    _name: str
-    _status: ActionStatus
+    _result: str = ""
+    _question: str = ""
+    _name: str = ""
+    _status: ActionStatus = ActionStatus.READY
 
-    def __init__(self):
-        self._name = self.initName()
-        self._result = ''
-        _status = ActionStatus.READY
+    def __init__(self, question: str):
+        self._question = question
+        self._name = self.init_name()
 
     @abstractmethod
-    def initName(self) -> str:
+    def init_name(self) -> str:
         pass
 
     @abstractmethod
     def execute(self) -> bool:
         return False
 
-    def getResult(self):
+    def get_result(self):
         return self._result
 
-    def getName(self) -> str:
+    def get_name(self) -> str:
         return self._name
 
-    def setStatus(self, status: ActionStatus):
+    def set_status(self, status: ActionStatus):
         self._status = status

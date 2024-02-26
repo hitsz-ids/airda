@@ -1,9 +1,9 @@
-from framework.assistant.action.llm_action import LlmAction
+from sql_agent.framework.assistant.action.llm_action import LlmAction
 
 
 class Planning(LlmAction):
 
-    def initPrompt(self, _question) -> str:
+    def init_prompt(self, _question) -> str:
         pass
 
     def execute(self) -> bool:
