@@ -2,11 +2,12 @@ from typing import Iterable, List, Union
 
 from bson.objectid import ObjectId
 from bson.raw_bson import RawBSONDocument
-from dg_agent.config import System
-from dg_agent.db import DB
 from overrides import override
 from pymongo import MongoClient
 from pymongo.typings import _DocumentType
+
+from sql_agent.config import System
+from sql_agent.db import DB
 
 
 class MongoDB(DB):
