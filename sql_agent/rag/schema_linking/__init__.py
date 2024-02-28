@@ -5,7 +5,10 @@ from typing import List, Tuple
 
 import numpy as np
 
+import sql_agent
+from sql_agent.config import System
 from sql_agent.db import DB
+from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.llm.embedding_model import EmbeddingModel
 
 logger = logging.getLogger(__name__)
@@ -77,7 +80,7 @@ class SchemaLinking:
             )
             logger.info(f"查询第{page}页数据,返回{len(db_embedding)}条数据")
             batch_tables = [item.table_name for item in db_embedding]
-            task = dg_agent.config.process_pool.submit(
+            task = sql_agent.config.process_pool.submit(
                 do_calc_similarity, (batch_tables, question_embedding, db_embedding)
             )
             if len(db_embedding) == 0:

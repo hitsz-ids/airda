@@ -2,7 +2,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List
 
-from dg_agent.config import Component, System
 from langchain.document_loaders import (
     CSVLoader,
     EverNoteLoader,
@@ -17,6 +16,9 @@ from langchain.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+from sql_agent.config import Component, System
+from sql_agent.rag.knowledge.types import Document
 
 logger = logging.getLogger(__name__)
 chunk_size = 500

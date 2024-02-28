@@ -11,7 +11,8 @@ from sql_agent.db.repositories.knowledge import KnowledgeRepository
 from sql_agent.db.repositories.types import Knowledge
 from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.rag import schema_linking
-from sql_agent.rag.knowledge import KnowledgeDocIndex
+from sql_agent.rag.knowledge import KnowledgeDocIndex, process_single_doc
+from sql_agent.rag.knowledge.types import Document
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,7 @@ class MongoDoc(KnowledgeDocIndex):
     @override
     def upload_doc(self, file_path: str, collection: str):
         logger.info(f"上传知识库文件:{file_path}")
-        texts = doc_index.process_single_doc(file_path)
+        texts = process_single_doc(file_path)
         if texts:
             for text in texts:
                 content_embedding = self.embedding_model.embed_query(text.page_content).tolist()
