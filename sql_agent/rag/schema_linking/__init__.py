@@ -1,7 +1,7 @@
-import concurrent.futures
 import heapq
 import logging
-from typing import List, Tuple
+import concurrent.futures
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -13,22 +13,22 @@ from sql_agent.llm.embedding_model import EmbeddingModel
 
 logger = logging.getLogger(__name__)
 
-TABLE_PREFIX = "tableSchemaDetails-"
-
 
 def calc_score(query_embedding, search_embedding):
-    narry = np.zeros(
+    new_arr = np.zeros(
         [len(search_embedding), len(max(search_embedding, key=lambda x: len(x))), 1024]
     )
     for i, j in enumerate(search_embedding):
-        narry[i][0 : len(j)] = j
+        new_arr[i][0 : len(j)] = j
 
-    product = np.einsum("ijk,lk->ilj", narry, query_embedding)
+    product = np.einsum("ijk,lk->ilj", new_arr, query_embedding)
     max_score = np.max(product, axis=2)
     return np.average(max_score, axis=1)
 
 
-def calc_similarity(query_embedding, table_embedding, columns_embedding, table_weight=30):
+def calc_similarity(
+    query_embedding, table_embedding, columns_embedding, table_weight=30
+):
     if not table_embedding or not columns_embedding:
         return [0]
     table_embedding = [item[0] for item in table_embedding]
@@ -46,7 +46,9 @@ def do_calc_similarity(args):
     batch_tables, question_embedding, db_embedding = args
     table_embedding = [item.table_comment_embedding for item in db_embedding]
     columns_embedding = [item.column_embedding for item in db_embedding]
-    batch_score = calc_similarity(question_embedding, table_embedding, columns_embedding)
+    batch_score = calc_similarity(
+        question_embedding, table_embedding, columns_embedding
+    )
     logger.info("批处理相似性分值完成")
     return batch_tables, batch_score
 
@@ -59,20 +61,30 @@ class SchemaLinking:
         self.storage = self.system.instance(DB)
         self.embedding_model = EmbeddingModel()
 
-    def get_similarity_table_names(
+    def search(
         self, question: str, db_connection_id: str, database: str
-    ) -> Tuple[List[str], List[str]]:
+    ) -> Tuple[list[str], list[str]]:
         logger.info("开始查询相似表")
-        question_embedding = self.embedding_model.embed_query(question)[0]
+        question_embedding = self._embedding_question(question)
+        all_tables, all_scores = self._retrieve_db_embeddings(
+            question_embedding, db_connection_id, database
+        )
+
+        sorted_result = self._rank_tables(all_tables, all_scores)
+        return self._filter_results(sorted_result, all_scores)
+
+    def _retrieve_db_embeddings(
+        self, question_embedding, db_connection_id: str, database: str
+    ):
         page = 1
         limit = 5
         all_tables = []
-        all_score = []
+        all_scores = []
         is_end = False
         instruction_repository = InstructionRepository(self.storage)
         tasks = []
+
         while not is_end:
-            logger.info(f"查询第{page}页数据")
             db_embedding = instruction_repository.find_embedding_by(
                 {"db_connection_id": str(db_connection_id), "database": database},
                 page=page,
@@ -85,38 +97,41 @@ class SchemaLinking:
             )
             if len(db_embedding) == 0:
                 break
-            page += 1
+            batch_tables = [item.table_name for item in db_embedding]
+            task = sql_agent.config.process_pool.submit(
+                do_calc_similarity,
+                (batch_tables, question_embedding, db_embedding),
+            )
             tasks.append(task)
+            page += 1
             if len(db_embedding) < limit:
                 is_end = True
 
-        results = [future.result() for future in concurrent.futures.as_completed(tasks)]
-        for result in results:
-            batch_tables, batch_score = result
+        for future in concurrent.futures.as_completed(tasks):
+            batch_tables, batch_score = future.result()
             all_tables.extend(batch_tables)
-            all_score.extend(batch_score)
+            all_scores.extend(batch_score)
+        return all_tables, all_scores
 
-        # 过滤出分数 大于 limit_score 的条数
-        limit_score = 65
-        limit_score_idxs = [idx for idx, sim in enumerate(all_score) if sim > limit_score]
-        limit_score_len = len(limit_score_idxs)
-
-        # 获取排名前100的数据表index
+    def _rank_tables(self, all_tables, all_scores):
         top_k = 100
-        top_k_idxs = heapq.nlargest(top_k, range(len(all_score)), key=all_score.__getitem__)
+        top_k_idxs = heapq.nlargest(
+            top_k, range(len(all_scores)), key=all_scores.__getitem__
+        )
+        sorted_result = [all_tables[i] for i in top_k_idxs]
+        return sorted_result
 
-        sorted_result = []
-        top_result_num = 5
-        logger.info(f"排名前「{top_k}」的数据表:")
-        for idx, table_index in enumerate(top_k_idxs):
-            table_name = all_tables[table_index]
-            sorted_result.append(table_name)
-            logger.info(f"表名：{table_name},相似性得分：{all_score[table_index]}，排名：{idx + 1}")
+    def _embedding_question(self, question: str):
+        return self.embedding_model.embed_query(question)[0]
 
+    def _filter_results(self, sorted_result, all_scores):
+        limit_score = 65
+        limit_score_idxs = [
+            idx for idx, sim in enumerate(all_scores) if sim > limit_score
+        ]
+        limit_score_len = len(limit_score_idxs)
         max_length = 10
-        if limit_score_len >= max_length:
+        if limit_score_len > max_length:
             limit_score_len = max_length
-        logger.info(f"超出阈值「{limit_score}」的数据表查询结果:")
-        for idx, table_index in enumerate(top_k_idxs[:limit_score_len]):
-            logger.info(f"表名：{all_tables[table_index]},相似性得分：{all_score[table_index]}，排名：{idx + 1}")
+        top_result_num = 5
         return sorted_result[:limit_score_len], sorted_result[:top_result_num]

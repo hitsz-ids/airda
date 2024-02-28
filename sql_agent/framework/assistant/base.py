@@ -21,8 +21,8 @@ class Assistant:
         size = len(self._actions)
         for i in range(size):
             action = self._actions[i](question)
-            self._currentActionIndex = i
             self.prepare(action)
+            self._currentActionIndex = i
             action.execute()
             yield action.get_result()
             intercepted = self.complete(action)

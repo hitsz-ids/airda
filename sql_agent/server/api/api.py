@@ -68,7 +68,10 @@ class APIImpl(API):
         # 获取知识库内容
         knowledge = self.doc_index.query_doc(question)
         # 获取assistants
-        assistants = {}
+        planner = Planner()
+        task = planner.plan("帮我查找当前有多少用户", "2")
+        for item in task.execute():
+            yield item
         """ 获得规划后进行执行.
         方案1.按照langchain agent式进行调用.
         方案2.按照metagpt的方式,让assistant自己进行处理与调用
