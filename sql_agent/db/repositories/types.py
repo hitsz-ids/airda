@@ -4,6 +4,17 @@ from typing import Any, Union
 from pydantic import BaseModel
 
 
+class Datasource(BaseModel):
+    id: Union[str, None] = None
+    type: Union[str, None] = None
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: Union[dict, None] = None
+
+
 class Knowledge(BaseModel):
     id: Union[str, None] = None
     source: str
@@ -36,7 +47,7 @@ class DBEmbeddingStatus(Enum):
     STOP = 4
 
 
-class InstructionSyncRecord(BaseModel):
+class InstructionEmbeddingRecord(BaseModel):
     id: Union[str, None] = None
     datasource_id: str
     status: int = DBEmbeddingStatus.EMBEDDING.value

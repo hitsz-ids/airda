@@ -3,6 +3,8 @@ from typing import Dict, List, Union
 from fastapi import File, UploadFile
 from pydantic import BaseModel
 
+from sql_agent.db.repositories.types import Instruction
+
 
 class ErrorResponse(BaseModel):
     object: str = "error"
@@ -24,6 +26,16 @@ class CompletionKnowledgeLoadRequest(BaseModel):
     file: UploadFile = File(...)
 
 
+class DatasourceAddRequest(BaseModel):
+    type: str
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: Union[Dict[str, str], None] = None
+
+
 class CompletionInstructionSyncRequest(BaseModel):
-    instructions: Union[str, List[Dict[str, str]]]
+    instructions: Union[str, List[Instruction]]
     datasource_id: str

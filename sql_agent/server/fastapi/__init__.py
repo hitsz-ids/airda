@@ -2,11 +2,12 @@ import fastapi
 from fastapi import BackgroundTasks, Depends, File, Form, UploadFile
 from overrides import overrides
 
-from sql_agent.framework import WebFrameworkServer
+from sql_agent.framework.server import WebFrameworkServer
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
     CompletionKnowledgeLoadRequest,
+    DatasourceAddRequest,
 )
 
 
@@ -41,6 +42,13 @@ class FastAPIServer(WebFrameworkServer):
             methods=["POST"],
             tags=["chat completions"],
         )
+
+        self.router.add_api_route(
+            "/v1/datasource/add",
+            self.datasource_add,
+            methods=["POST"],
+            tags=["add datasource"],
+        )
         self.router.add_api_route(
             "/v1/instruction/sync",
             self.instruction_sync,
@@ -62,6 +70,9 @@ class FastAPIServer(WebFrameworkServer):
     async def instruction_sync(
         self, request: CompletionInstructionSyncRequest, background_tasks: BackgroundTasks
     ):
+        return await self._api.instruction_sync(request, background_tasks)
+
+    async def datasource_add(self, request: DatasourceAddRequest):
         return await self._api.instruction_sync(request, background_tasks)
 
     async def knowledge_train(

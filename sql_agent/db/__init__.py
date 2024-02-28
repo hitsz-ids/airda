@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from dg_agent.config import Component, System
+from sql_agent.config import Component, System
 
 
 class DB(Component, ABC):

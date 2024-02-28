@@ -1,17 +1,33 @@
 import logging
 import os
 
+from bson import ObjectId
 from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
 from overrides import override
 
 from sql_agent.config import System
+from sql_agent.db import DB
+from sql_agent.db.repositories.datasource import DatasourceRepository
+from sql_agent.db.repositories.instructions import InstructionRepository
+from sql_agent.db.repositories.sync_instructions import (
+    InstructionEmbeddingRecordRepository,
+)
+from sql_agent.db.repositories.types import (
+    Datasource,
+    DBEmbeddingStatus,
+    EmbeddingInstruction,
+    Instruction,
+)
+from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
     CompletionKnowledgeLoadRequest,
+    DatasourceAddRequest,
     ErrorResponse,
 )
+from sql_agent.protocol.response import BaseResponse
 from sql_agent.rag.knowledge import KnowledgeDocIndex
 from sql_agent.server.api import API
 from sql_agent.utils import file
@@ -23,11 +39,22 @@ def create_error_response(code: int, message: str) -> JSONResponse:
     return JSONResponse(ErrorResponse(message=message, code=code).dict(), status_code=400)
 
 
+def paginate_array(array, page_size):
+    result = []
+    for i in range(0, len(array), page_size):
+        result.append(array[i : i + page_size])
+    return result
+
+    # 示例用法
+
+
 class APIImpl(API):
     def __init__(self, system: System):
         super().__init__(system)
         self.system = system
+        self.storage = self.system.instance(DB)
         self.doc_index = self.system.instance(KnowledgeDocIndex)
+        self.embedding_model = EmbeddingModel()
 
     @override
     async def create_completion(self, request: ChatCompletionRequest):
@@ -46,6 +73,23 @@ class APIImpl(API):
         方案1.按照langchain agent式进行调用.
         方案2.按照metagpt的方式,让assistant自己进行处理与调用
         """
+
+    @override
+    async def datasource_add(self, request: DatasourceAddRequest):
+        datasource = Datasource(
+            type=request.type,
+            host=request.host,
+            port=request.port,
+            database=request.database,
+            user_name=request.user_name,
+            password=request.password,
+            config=request.config,
+        )
+
+        datasourceRepository = DatasourceRepository(self.storage)
+        datasourceRepository.insert(datasource)
+
+        return BaseResponse(msg="成功", code=0, data={"id": datasource.id})
 
     @override
     async def knowledge_train(
@@ -69,12 +113,97 @@ class APIImpl(API):
         return True
 
     @override
-    def instruction_sync(
+    async def instruction_sync(
         self, request: CompletionInstructionSyncRequest, background_tasks: BackgroundTasks
     ):
-        # 创建同步记录
-        # 开始同步表结构
-        pass
+        instructions = request.instructions
+        if instructions:
+            page_size = 20
+            page_array = paginate_array(instructions, page_size)
+        else:
+            # 空数组 报错
+            return BaseResponse(msg="请传入有效表结构", code=0, data=None)
+        datasource_id = request.datasource_id
+        embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
+        sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
+        if (
+            sync_embedding_record is None
+            or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
+        ):
+            return True
+        instruction_repository = InstructionRepository(self.storage)
+        instruction_repository.delete_embedding_by({"datasource_id": datasource_id})
+        success = True
+        for page_data in page_array:
+            save_result = self.process_page(page_data, sync_embedding_record.id)
+            if isinstance(save_result, str) and save_result.startswith("Error"):
+                logger.info(f"Error processing data  {save_result}")
+                success = False
+                break
+            elif isinstance(save_result, bool) and not save_result:
+                success = False
+                logger.info(f"Error processing data  {save_result}")
+                break
+            else:
+                logger.info(f"Successfully processed data")
+        if success:
+            sync_embedding_record.status = DBEmbeddingStatus.SUCCESS.value
+        else:
+            instruction_repository.delete_embedding_by(
+                {"datasource_id": sync_embedding_record.datasource_id}
+            )
+            sync_embedding_record.status = DBEmbeddingStatus.FAILED.value
+        embedding_repository.update(sync_embedding_record)
+
+    def process_page(self, schema_list: list[Instruction], sync_embedding_id: str):
+        if len(schema_list) > 0:
+            instruction_repository = InstructionRepository(self.storage)
+            embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
+            embedding_record = embedding_repository.find_one({"_id": ObjectId(sync_embedding_id)})
+            if embedding_record:
+                if embedding_record.status == DBEmbeddingStatus.SUCCESS.value:
+                    return True
+                elif embedding_record.status != DBEmbeddingStatus.EMBEDDING.value:
+                    return False
+            else:
+                return False
+            try:
+                table_comments = []
+                table_fields = []
+                for db_schema in schema_list:
+                    table_schema = db_schema.instruction
+                    if table_schema:
+                        des = table_schema["description"]
+                        columns = table_schema["columns"]
+                        column_str = ""
+                        for column in columns:
+                            column_str += f" {column['name']} {column['description']}"
+                        table_fields.append(column_str)
+                        table_comments.append(des)
+                comment_embedding = self.embedding_model.embed_query(table_comments).tolist()
+                column_embedding = self.embedding_model.embed_query(table_fields).tolist()
+                for idx in range(len(schema_list)):
+                    db_schema = schema_list[idx]
+                    table_schema = db_schema.instruction
+                    if table_schema:
+                        table_name = table_schema["table_name"]
+                        table_comment_embedding = comment_embedding[idx]
+                        table_column_embedding = column_embedding[idx]
+                        db_embedding_instruction = EmbeddingInstruction(
+                            table_name=table_name,
+                            db_connection_id=db_schema.datasource_id,
+                            database=db_schema.database,
+                            table_comment=table_schema["description"],
+                            table_comment_embedding=table_comment_embedding,
+                            column_embedding=table_column_embedding,
+                        )
+                        logger.info(f"保存表向量结果: {db_schema.database}-{table_name}")
+                        instruction_repository.insert_embedding(db_embedding_instruction)
+                        logger.info(f"向量化Database: {db_schema.database} -> Table:{table_name} 结束")
+            except Exception as e:
+                logger.error(f"向量化数据异常:{e}")
+                return f"Error 向量化数据失败"
+            return f"Successful 向量化表结构成功"
 
     def load_file_vector_store(self, file_path, file_id, file_name):
         logger.info(f"知识库文件上传: {file_name}")

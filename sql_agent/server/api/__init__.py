@@ -6,12 +6,17 @@ from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
     CompletionKnowledgeLoadRequest,
+    DatasourceAddRequest,
 )
 
 
 class API(ABC):
     @abstractmethod
     async def create_completion(self, request: ChatCompletionRequest):
+        pass
+
+    @abstractmethod
+    async def datasource_add(self, request: DatasourceAddRequest):
         pass
 
     @abstractmethod
