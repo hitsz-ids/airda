@@ -8,7 +8,6 @@ from typing import Any, Dict, Type, TypeVar, Union, cast
 
 from dotenv import load_dotenv
 from overrides import EnforceOverrides
-from pydantic import BaseSettings
 
 setting_class_keys: Dict[str, str] = {
     "sql_agent.server.api.API": "api_impl",
