@@ -6,7 +6,6 @@ from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
 from overrides import override
 
-from sql_agent.config import System
 from sql_agent.db import DB
 from sql_agent.db.repositories.datasource import DatasourceRepository
 from sql_agent.db.repositories.instructions import InstructionRepository
@@ -21,6 +20,7 @@ from sql_agent.db.repositories.types import (
     InstructionEmbeddingRecord,
 )
 from sql_agent.llm.embedding_model import EmbeddingModel
+from sql_agent.planner.planner import Planner
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
@@ -32,6 +32,7 @@ from sql_agent.protocol import (
 from sql_agent.protocol.response import BaseResponse
 from sql_agent.rag.knowledge import KnowledgeDocIndex
 from sql_agent.server.api import API
+from sql_agent.setting import System
 from sql_agent.utils import file
 
 logger = logging.getLogger(__name__)
@@ -54,8 +55,8 @@ class APIImpl(API):
     def __init__(self, system: System):
         super().__init__(system)
         self.system = system
-        self.storage = self.system.instance(DB)
-        self.doc_index = self.system.instance(KnowledgeDocIndex)
+        self.storage = self.system.get_instance(DB)
+        self.doc_index = self.system.get_instance(KnowledgeDocIndex)
         self.embedding_model = EmbeddingModel()
 
     @override
@@ -70,7 +71,10 @@ class APIImpl(API):
         # 获取知识库内容
         knowledge = self.doc_index.query_doc(question)
         # 获取assistants
-        assistants = {}
+        planner = Planner()
+        task = planner.plan(question)
+        for item in task.execute():
+            yield item
         """ 获得规划后进行执行.
         方案1.按照langchain agent式进行调用.
         方案2.按照metagpt的方式,让assistant自己进行处理与调用
@@ -116,7 +120,9 @@ class APIImpl(API):
 
     @override
     async def instruction_sync(
-        self, request: CompletionInstructionSyncRequest, background_tasks: BackgroundTasks
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
     ):
         instructions = request.instructions
         if instructions:
@@ -129,6 +135,7 @@ class APIImpl(API):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
         sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
         instruction_repository = InstructionRepository(self.storage)
+        sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
         if (
             sync_embedding_record is None
             or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value

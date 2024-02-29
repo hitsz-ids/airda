@@ -6,7 +6,7 @@ from overrides import override
 from pymongo import MongoClient
 from pymongo.typings import _DocumentType
 
-from sql_agent.config import System
+from sql_agent.setting import System
 from sql_agent.db import DB
 
 
@@ -15,8 +15,8 @@ class MongoDB(DB):
 
     def __init__(self, system: System):
         super().__init__(system)
-        db_uri = system.settings.require("db_uri")
-        db_name = system.settings.require("db_name")
+        db_uri = system.settings.get("db_uri")
+        db_name = system.settings.get("db_name")
         self._data_store = MongoClient(db_uri)[db_name]
 
     @override

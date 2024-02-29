@@ -17,7 +17,7 @@ from langchain.document_loaders import (
 )
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
-from sql_agent.config import Component, System
+from sql_agent.setting import BaseModule, System
 from sql_agent.rag.knowledge.types import Document
 
 logger = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ def process_single_doc(file_path: str) -> List[Document]:
     return texts
 
 
-class KnowledgeDocIndex(Component, ABC):
+class KnowledgeDocIndex(BaseModule, ABC):
     collections: List[str]
 
     @abstractmethod

@@ -1,4 +1,6 @@
 from abc import abstractmethod, ABC
+from typing import Any
+
 from sql_agent.framework.assistant.action import ActionStatus
 
 
@@ -17,7 +19,7 @@ class Action:
         pass
 
     @abstractmethod
-    def execute(self) -> bool:
+    def execute(self, *args: Any, **kwargs: Any) -> Any:
         return False
 
     def get_result(self):

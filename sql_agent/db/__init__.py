@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
 
-from sql_agent.config import Component, System
+from sql_agent.setting import BaseModule, System
 
 
-class DB(Component, ABC):
+class DB(BaseModule, ABC):
     @abstractmethod
     def __init__(self, system: System):
         self.system = system

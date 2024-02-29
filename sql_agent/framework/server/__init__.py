@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from sql_agent import config
-from sql_agent.config import System
+from sql_agent import setting
+from sql_agent.setting import System
 from sql_agent.server.api import API
 
 
@@ -10,7 +10,7 @@ class WebFrameworkServer(ABC):
         self.host = host
         self.port = port
         self.app = self.create_app()
-        self.settings = config.settings
+        self.settings = setting.env_settings
         self.system = System(self.settings)
         self._api = self.init_api()
 
@@ -27,4 +27,4 @@ class WebFrameworkServer(ABC):
         pass
 
     def init_api(self):
-        return self.system.instance(API)
+        return self.system.get_instance(API)

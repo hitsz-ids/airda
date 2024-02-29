@@ -33,7 +33,12 @@ class FastAPIServer(WebFrameworkServer):
         self.add_routes(self.app)
         import uvicorn
 
-        uvicorn.run(self.app, host=self.host, port=self.port)
+        uvicorn.run(
+            self.app,
+            host=self.host,
+            port=self.port,
+            log_level=self.settings.get("log_level"),
+        )
 
     @overrides
     def add_routes(self, app):
@@ -83,7 +88,9 @@ class FastAPIServer(WebFrameworkServer):
         return await self._api.create_completion(request)
 
     async def instruction_sync(
-        self, request: CompletionInstructionSyncRequest, background_tasks: BackgroundTasks
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
@@ -94,7 +101,7 @@ class FastAPIServer(WebFrameworkServer):
         return await self._api.instruction_sync_stop(request)
 
     async def datasource_add(self, request: DatasourceAddRequest):
-        return await self._api.instruction_sync(request)
+        return await self._api.datasource_add(request)
 
     async def knowledge_train(
         self,

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from starlette.background import BackgroundTasks
+from fastapi import BackgroundTasks
 
 from sql_agent.protocol import (
     ChatCompletionRequest,
@@ -10,9 +10,10 @@ from sql_agent.protocol import (
     CompletionKnowledgeLoadRequest,
     DatasourceAddRequest,
 )
+from sql_agent.setting import BaseModule
 
 
-class API(ABC):
+class API(BaseModule, ABC):
     @abstractmethod
     async def create_completion(self, request: ChatCompletionRequest):
         pass
@@ -22,15 +23,11 @@ class API(ABC):
         pass
 
     @abstractmethod
-    async def instruction_sync(self, request: CompletionInstructionSyncRequest):
-        pass
-
-    @abstractmethod
-    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
-        pass
-
-    @abstractmethod
-    async def instruction_sync_stop(self, request: CompletionInstructionSyncStopRequest):
+    async def instruction_sync(
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
+    ):
         pass
 
     @abstractmethod
