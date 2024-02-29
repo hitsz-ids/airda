@@ -2,7 +2,7 @@ from typing import Union
 
 from bson.objectid import ObjectId
 
-from sql_agent.db.repositories.types import EmbeddingRecord
+from sql_agent.db.repositories.types import InstructionEmbeddingRecord as EmbeddingRecord
 
 SYNC_EMBEDDING_COLLECTION = "sync_datasource"
 

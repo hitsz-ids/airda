@@ -20,11 +20,7 @@ def create_assistants(plan_result: list[str]) -> list[Assistant]:
     return assistants
 
 
-class Planner(Assistant):
-    def init_actions(self) -> list[type[Action]]:
-        return []
-
-    _prompt = """
+_prompt = """
 你是一个AI助理总管，你拥有两个助理来辅助你的工作，他们有各自的能力和特点。你的任务是根据用户提出问题推荐或选择其中的一个或者多个来解决用户的问题。
 
 两个助理的情况分别是： 
@@ -43,10 +39,15 @@ xxxx
 以下是用户的问题：
 {question}
 """
-    _assistants: list[Assistant]
+
+
+class Planner(Assistant):
+    def init_actions(self) -> list[type[Action]]:
+        return []
+
     _question: str
 
-    def plan(self, question: str, chat_type: str) -> Task:
+    def plan(self, question: str, chat_type: str = "2") -> Task:
         self._question = question
         # TODO 加一个黄赌毒，涉政的检查
         # TODO 任务确认是否继续SQL、Chat、不相关（这版本前端选择）
@@ -63,8 +64,7 @@ xxxx
         else:
             plan_result = ["SQL"]
         assistants = create_assistants(plan_result)
-        self._assistants = assistants
-        return Task(question, self._assistants)
+        return Task(question, assistants)
 
     def before(self, action: Action):
         pass

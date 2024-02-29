@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse
 from overrides import override
 
-from sql_agent.config import System
+from sql_agent.setting import System
 from sql_agent.db import DB
 from sql_agent.db.repositories.datasource import DatasourceRepository
 from sql_agent.db.repositories.instructions import InstructionRepository
@@ -20,6 +20,7 @@ from sql_agent.db.repositories.types import (
     Instruction,
 )
 from sql_agent.llm.embedding_model import EmbeddingModel
+from sql_agent.planner.planner import Planner
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
@@ -36,7 +37,9 @@ logger = logging.getLogger(__name__)
 
 
 def create_error_response(code: int, message: str) -> JSONResponse:
-    return JSONResponse(ErrorResponse(message=message, code=code).dict(), status_code=400)
+    return JSONResponse(
+        ErrorResponse(message=message, code=code).dict(), status_code=400
+    )
 
 
 def paginate_array(array, page_size):
@@ -52,8 +55,8 @@ class APIImpl(API):
     def __init__(self, system: System):
         super().__init__(system)
         self.system = system
-        self.storage = self.system.instance(DB)
-        self.doc_index = self.system.instance(KnowledgeDocIndex)
+        self.storage = self.system.get_instance(DB)
+        self.doc_index = self.system.get_instance(KnowledgeDocIndex)
         self.embedding_model = EmbeddingModel()
 
     @override
@@ -69,7 +72,7 @@ class APIImpl(API):
         knowledge = self.doc_index.query_doc(question)
         # 获取assistants
         planner = Planner()
-        task = planner.plan("帮我查找当前有多少用户", "2")
+        task = planner.plan(question)
         for item in task.execute():
             yield item
         """ 获得规划后进行执行.
@@ -112,12 +115,16 @@ class APIImpl(API):
             logger.info("文件不存在")
             return create_error_response(404, "文件不存在")
         file_name = request.file_name
-        background_tasks.add_task(self.load_file_vector_store, file_path, file_id, file_name)
+        background_tasks.add_task(
+            self.load_file_vector_store, file_path, file_id, file_name
+        )
         return True
 
     @override
     async def instruction_sync(
-        self, request: CompletionInstructionSyncRequest, background_tasks: BackgroundTasks
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
     ):
         instructions = request.instructions
         if instructions:
@@ -128,7 +135,9 @@ class APIImpl(API):
             return BaseResponse(msg="请传入有效表结构", code=0, data=None)
         datasource_id = request.datasource_id
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
+        sync_embedding_record = embedding_repository.find_one(
+            {"datasource_id": datasource_id}
+        )
         if (
             sync_embedding_record is None
             or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
@@ -162,7 +171,9 @@ class APIImpl(API):
         if len(schema_list) > 0:
             instruction_repository = InstructionRepository(self.storage)
             embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-            embedding_record = embedding_repository.find_one({"_id": ObjectId(sync_embedding_id)})
+            embedding_record = embedding_repository.find_one(
+                {"_id": ObjectId(sync_embedding_id)}
+            )
             if embedding_record:
                 if embedding_record.status == DBEmbeddingStatus.SUCCESS.value:
                     return True
@@ -183,8 +194,12 @@ class APIImpl(API):
                             column_str += f" {column['name']} {column['description']}"
                         table_fields.append(column_str)
                         table_comments.append(des)
-                comment_embedding = self.embedding_model.embed_query(table_comments).tolist()
-                column_embedding = self.embedding_model.embed_query(table_fields).tolist()
+                comment_embedding = self.embedding_model.embed_query(
+                    table_comments
+                ).tolist()
+                column_embedding = self.embedding_model.embed_query(
+                    table_fields
+                ).tolist()
                 for idx in range(len(schema_list)):
                     db_schema = schema_list[idx]
                     table_schema = db_schema.instruction
@@ -200,9 +215,15 @@ class APIImpl(API):
                             table_comment_embedding=table_comment_embedding,
                             column_embedding=table_column_embedding,
                         )
-                        logger.info(f"保存表向量结果: {db_schema.database}-{table_name}")
-                        instruction_repository.insert_embedding(db_embedding_instruction)
-                        logger.info(f"向量化Database: {db_schema.database} -> Table:{table_name} 结束")
+                        logger.info(
+                            f"保存表向量结果: {db_schema.database}-{table_name}"
+                        )
+                        instruction_repository.insert_embedding(
+                            db_embedding_instruction
+                        )
+                        logger.info(
+                            f"向量化Database: {db_schema.database} -> Table:{table_name} 结束"
+                        )
             except Exception as e:
                 logger.error(f"向量化数据异常:{e}")
                 return f"Error 向量化数据失败"

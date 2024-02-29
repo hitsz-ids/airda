@@ -6,7 +6,7 @@ from typing import Any, Tuple
 import numpy as np
 
 import sql_agent
-from sql_agent.config import System
+from sql_agent.setting import System
 from sql_agent.db import DB
 from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.llm.embedding_model import EmbeddingModel
@@ -58,7 +58,7 @@ class SchemaLinking:
 
     def __init__(self, system: System):
         self.system = system
-        self.storage = self.system.instance(DB)
+        self.storage = self.system.get_instance(DB)
         self.embedding_model = EmbeddingModel()
 
     def search(

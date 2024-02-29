@@ -2,7 +2,7 @@ from typing import Union
 
 from bson.objectid import ObjectId
 
-from sql_agent.db.repositories.types import Instruction
+from sql_agent.db.repositories.types import Instruction, EmbeddingInstruction
 
 DB_COLLECTION = "instructions"
 
