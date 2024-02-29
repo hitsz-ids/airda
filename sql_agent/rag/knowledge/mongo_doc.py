@@ -4,8 +4,7 @@ from typing import List
 
 from overrides import override
 
-from sql_agent import setting
-from sql_agent.setting import System
+from sql_agent.setting import System, process_pool
 from sql_agent.db import DB
 from sql_agent.db.repositories.knowledge import KnowledgeRepository
 from sql_agent.db.repositories.types import Knowledge
@@ -39,7 +38,7 @@ class MongoDoc(KnowledgeDocIndex):
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
         self.knowledge_repository = KnowledgeRepository(system.get_instance(DB))
-        self.process_pool = config.process_pool
+        self.process_pool = process_pool
 
     @override
     def query_doc(self, query_texts: str, source: List[str], collection: str, num_results: int):

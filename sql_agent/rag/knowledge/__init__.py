@@ -97,8 +97,8 @@ def process_single_doc(file_path: str) -> List[Document]:
 class KnowledgeDocIndex(BaseModule, ABC):
     collections: List[str]
 
-    @abstractmethod
     def __init__(self, system: System):
+        super().__init__(system)
         self.system = system
 
     @abstractmethod

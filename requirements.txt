@@ -13,3 +13,4 @@ python-docx
 httpx==0.24.1
 pymongo==4.4.0
 overrides
+python-multipart
