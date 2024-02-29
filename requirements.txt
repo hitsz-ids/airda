@@ -1,6 +1,7 @@
 pandas
 fastapi
 langchain
+langchain-community
 tiktoken
 uvicorn
 python-dotenv
@@ -9,6 +10,6 @@ torch
 sentence-transformers
 unstructured
 python-docx
-bson
 httpx==0.24.1
 pymongo==4.4.0
+overrides
