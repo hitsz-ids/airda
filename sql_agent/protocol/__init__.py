@@ -39,3 +39,11 @@ class DatasourceAddRequest(BaseModel):
 class CompletionInstructionSyncRequest(BaseModel):
     instructions: Union[str, List[Instruction]]
     datasource_id: str
+
+
+class CompletionInstructionSyncStatusRequest(BaseModel):
+    id: str
+
+
+class CompletionInstructionSyncStopRequest(BaseModel):
+    id: str

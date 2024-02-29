@@ -13,7 +13,7 @@ class InstructionEmbeddingRecordRepository:
 
     def insert(self, embedding_record: InstructionEmbeddingRecord) -> InstructionEmbeddingRecord:
         embedding_record_dict = embedding_record.dict(exclude={"id"})
-        embedding_record_dict["db_connection_id"] = embedding_record.datasource_id
+        embedding_record_dict["datasource_id"] = embedding_record.datasource_id
         embedding_record.id = str(
             self.storage.insert_one(SYNC_EMBEDDING_COLLECTION, embedding_record_dict)
         )
@@ -24,12 +24,12 @@ class InstructionEmbeddingRecordRepository:
         if not row:
             return None
         row["id"] = str(row["_id"])
-        row["db_connection_id"] = str(row["db_connection_id"])
+        row["datasource_id"] = str(row["datasource_id"])
         return InstructionEmbeddingRecord(**row)
 
     def update(self, embedding_record: InstructionEmbeddingRecord) -> InstructionEmbeddingRecord:
         embedding_record_dict = embedding_record.dict(exclude={"id"})
-        embedding_record_dict["db_connection_id"] = embedding_record.datasource_id
+        embedding_record_dict["datasource_id"] = embedding_record.datasource_id
 
         self.storage.update_or_create(
             SYNC_EMBEDDING_COLLECTION,

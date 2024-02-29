@@ -2,7 +2,7 @@ from typing import Union
 
 from bson.objectid import ObjectId
 
-from sql_agent.db.repositories.types import Instruction
+from sql_agent.db.repositories.types import EmbeddingInstruction, Instruction
 
 DB_COLLECTION = "instructions"
 
@@ -67,6 +67,9 @@ class InstructionRepository:
 
     def delete_by_id(self, id: str) -> int:
         return self.storage.delete_by_id(DB_COLLECTION, id)
+
+    def delete_by(self, query: dict) -> int:
+        return self.storage.delete_by(DB_COLLECTION, query)
 
     def insert_embedding(self, embedding_instruction: EmbeddingInstruction):
         instruction_dict = embedding_instruction.dict(exclude={"id"})

@@ -6,6 +6,8 @@ from sql_agent.framework.server import WebFrameworkServer
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
+    CompletionInstructionSyncStatusRequest,
+    CompletionInstructionSyncStopRequest,
     CompletionKnowledgeLoadRequest,
     DatasourceAddRequest,
 )
@@ -56,6 +58,19 @@ class FastAPIServer(WebFrameworkServer):
             tags=["add gold_sql"],
         )
         self.router.add_api_route(
+            "/v1/instruction/status",
+            self.instruction_sync_status,
+            methods=["GET"],
+            tags=["add gold_sql"],
+        )
+
+        self.router.add_api_route(
+            "/v1/instruction/stop",
+            self.instruction_sync_stop,
+            methods=["POST"],
+            tags=["add gold_sql"],
+        )
+        self.router.add_api_route(
             "/v1/knowledge/train",
             self.knowledge_train,
             methods=["POST"],
@@ -72,8 +87,14 @@ class FastAPIServer(WebFrameworkServer):
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
+    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
+        return await self._api.instruction_sync_status(request)
+
+    async def instruction_sync_stop(self, request: CompletionInstructionSyncStopRequest):
+        return await self._api.instruction_sync_stop(request)
+
     async def datasource_add(self, request: DatasourceAddRequest):
-        return await self._api.instruction_sync(request, background_tasks)
+        return await self._api.instruction_sync(request)
 
     async def knowledge_train(
         self,

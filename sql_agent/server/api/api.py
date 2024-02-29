@@ -18,11 +18,13 @@ from sql_agent.db.repositories.types import (
     DBEmbeddingStatus,
     EmbeddingInstruction,
     Instruction,
+    InstructionEmbeddingRecord,
 )
 from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.protocol import (
     ChatCompletionRequest,
     CompletionInstructionSyncRequest,
+    CompletionInstructionSyncStatusRequest,
     CompletionKnowledgeLoadRequest,
     DatasourceAddRequest,
     ErrorResponse,
@@ -122,17 +124,25 @@ class APIImpl(API):
             page_array = paginate_array(instructions, page_size)
         else:
             # 空数组 报错
-            return BaseResponse(msg="请传入有效表结构", code=0, data=None)
+            return BaseResponse(msg="请传入有效表结构", code=10001, data=None)
         datasource_id = request.datasource_id
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
         sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
+        instruction_repository = InstructionRepository(self.storage)
         if (
             sync_embedding_record is None
             or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
         ):
-            return True
-        instruction_repository = InstructionRepository(self.storage)
-        instruction_repository.delete_embedding_by({"datasource_id": datasource_id})
+            instruction_repository.delete_by({"datasource_id": datasource_id})
+            if sync_embedding_record is None:
+                sync_embedding_record = InstructionEmbeddingRecord(datasource_id=datasource_id)
+                embedding_repository.insert(sync_embedding_record)
+            else:
+                sync_embedding_record.status = DBEmbeddingStatus.EMBEDDING.value
+                embedding_repository.update(sync_embedding_record)
+            self.save_instructions(instructions)
+        else:
+            return BaseResponse(msg="成功", code=0, data={"id": sync_embedding_record.id})
         success = True
         for page_data in page_array:
             save_result = self.process_page(page_data, sync_embedding_record.id)
@@ -154,6 +164,29 @@ class APIImpl(API):
             )
             sync_embedding_record.status = DBEmbeddingStatus.FAILED.value
         embedding_repository.update(sync_embedding_record)
+        return BaseResponse(msg="成功", code=0, data={"id": sync_embedding_record.id})
+
+    @override
+    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
+        embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
+        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        if sync_embedding_record is None:
+            return BaseResponse(msg="查询失败,未查到同步记录", code=10002, data={})
+        else:
+            return BaseResponse(msg="成功", code=0, data={"status": sync_embedding_record.status})
+
+    @override
+    async def instruction_sync_stop(self, request: CompletionInstructionSyncStatusRequest):
+        embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
+        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        if (
+            sync_embedding_record
+            and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
+        ):
+            sync_embedding_record.status = DBEmbeddingStatus.STOP.value
+            embedding_repository.update(sync_embedding_record)
+
+        return BaseResponse(msg="成功", code=0, data={})
 
     def process_page(self, schema_list: list[Instruction], sync_embedding_id: str):
         if len(schema_list) > 0:
@@ -210,5 +243,12 @@ class APIImpl(API):
         is_used = 0  # 未使用
         # 当前版本限制为csv文件.
         extension = file.get_file_extension(file_name)
+
+        background_tasks.add_task(self.load_file_vector_store, file_path, file_id, file_name)
         # 1.增加同步状态,同步完后修改为成功
         os.remove(file_path)
+
+    def save_instructions(self, instructions: list[Instruction]):
+        instruction_repository = InstructionRepository(self.storage)
+        for instruction in instructions:
+            instruction_repository.insert(instruction)
