@@ -1,5 +1,3 @@
-from typing import Union
-
 from bson.objectid import ObjectId
 
 from sql_agent.db.repositories.types import Datasource
@@ -25,7 +23,7 @@ class DatasourceRepository:
         )
         return datasource
 
-    def find_by_id(self, id: str) -> Union[Datasource, None]:
+    def find_by_id(self, id: str) -> Datasource | None:
         row = self.storage.find_one(DATASOURCE_COLLECTION, {"_id": ObjectId(id)})
         if not row:
             return None

@@ -1,6 +1,5 @@
 import concurrent.futures
 import logging
-from typing import List
 
 from overrides import override
 
@@ -41,7 +40,7 @@ class MongoDoc(KnowledgeDocIndex):
         self.process_pool = process_pool
 
     @override
-    def query_doc(self, query_texts: str, source: List[str], collection: str, num_results: int):
+    def query_doc(self, query_texts: str, source: list[str], collection: str, num_results: int):
         query_condition = {}
         if source:
             query_condition = {"source": {"$in": source}}
@@ -91,5 +90,5 @@ class MongoDoc(KnowledgeDocIndex):
         self.knowledge_repository.delete_by(condition)
 
     @override
-    def delete_doc_ids(self, ids: List[str], collection: str):
+    def delete_doc_ids(self, ids: list[str], collection: str):
         pass

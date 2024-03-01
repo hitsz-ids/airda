@@ -1,4 +1,4 @@
-from typing import Iterable, List, Union
+from typing import Iterable, Union
 
 from bson.objectid import ObjectId
 from bson.raw_bson import RawBSONDocument
@@ -28,8 +28,8 @@ class MongoDB(DB):
         return self._data_store[collection].insert_one(obj).inserted_id
 
     def insert_many(
-        self, collection: str, obj: Iterable[Union[_DocumentType, RawBSONDocument]]
-    ) -> List:
+            self, collection: str, obj: Iterable[Union[_DocumentType, RawBSONDocument]]
+    ) -> list:
         return self._data_store[collection].insert_many(obj).inserted_ids
 
     @override
@@ -56,12 +56,12 @@ class MongoDB(DB):
 
     @override
     def find(
-        self,
-        collection: str,
-        query: dict,
-        sort: list = None,
-        page: int = 0,
-        limit: int = 0,
+            self,
+            collection: str,
+            query: dict,
+            sort: list = None,
+            page: int = 0,
+            limit: int = 0,
     ) -> list:
         skip_count = (page - 1) * limit
         cursor = self._data_store[collection].find(query)

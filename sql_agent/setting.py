@@ -4,13 +4,13 @@ import inspect
 import os
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, Type, TypeVar, Union, cast
+from typing import Any, Type, TypeVar, cast
 
 from dotenv import load_dotenv
 from overrides import EnforceOverrides
 from pydantic.v1 import BaseSettings
 
-setting_class_keys: Dict[str, str] = {
+setting_class_keys: dict[str, str] = {
     "sql_agent.server.api.API": "api_impl",
     "sql_agent.db.DB": "db_impl",
     # "sql_agent.model.llm.LLM": "llm_impl",
@@ -50,15 +50,15 @@ class EnvSettings(BaseSettings):
     except KeyError:
         # 如果失败，使用默认值
         log_level: str = LogLevel.INFO.value
-    db_name: Union[str, None] = os.getenv("MONGODB_DB_NAME")
-    db_uri: Union[str, None] = os.getenv("MONGODB_URI")
-    openai_api_key: Union[str, None] = os.getenv("OPENAI_KEY")
+    db_name: str | None = os.getenv("MONGODB_DB_NAME")
+    db_uri: str | None = os.getenv("MONGODB_URI")
+    openai_api_key: str | None = os.getenv("OPENAI_KEY")
     encrypt_key: str = os.getenv("ENCRYPT_KEY")
-    application_id: Union[str, None] = os.getenv("APPID")
+    application_id: str | None = os.getenv("APPID")
     model_name: str = os.getenv("model_name")
 
-    embeddings_model_name: Union[str, None] = os.getenv("EMBEDDINGS_MODEL_NAME")
-    knowledge_path: Union[str, None] = os.getenv("KNOWLEDGE_PATH")
+    embeddings_model_name: str | None = os.getenv("EMBEDDINGS_MODEL_NAME")
+    knowledge_path: str | None = os.getenv("KNOWLEDGE_PATH")
 
     def get(self, key: str) -> Any:
         val = self[key]
@@ -91,7 +91,7 @@ class BaseModule(ABC, EnforceOverrides):
 
 class System(BaseModule):
     env_settings: EnvSettings
-    _instances: Dict[Type[BaseModule], BaseModule]
+    _instances: dict[Type[BaseModule], BaseModule]
 
     def __init__(self, settings: EnvSettings):
         self.settings = settings

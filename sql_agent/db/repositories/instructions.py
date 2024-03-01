@@ -1,5 +1,3 @@
-from typing import Union
-
 from bson.objectid import ObjectId
 
 from sql_agent.db.repositories.types import Instruction, EmbeddingInstruction
@@ -20,7 +18,7 @@ class InstructionRepository:
 
         return instruction
 
-    def find_one(self, query: dict) -> Union[Instruction, None]:
+    def find_one(self, query: dict) -> Instruction | None:
         row = self.storage.find_one(DB_COLLECTION, query)
         if not row:
             return None
@@ -39,7 +37,7 @@ class InstructionRepository:
         )
         return instruction
 
-    def find_by_id(self, id: str) -> Union[Instruction, None]:
+    def find_by_id(self, id: str) -> Instruction | None:
         row = self.storage.find_one(DB_COLLECTION, {"_id": ObjectId(id)})
         if not row:
             return None
@@ -81,7 +79,7 @@ class InstructionRepository:
         return EmbeddingInstruction(**row)
 
     def find_embedding_by(
-        self, query: dict, page: int = 1, limit: int = 10
+            self, query: dict, page: int = 1, limit: int = 10
     ) -> list[EmbeddingInstruction]:
         rows = self.storage.find(DB_EMBEDDING_COLLECTION, query, page=page, limit=limit)
         result = []

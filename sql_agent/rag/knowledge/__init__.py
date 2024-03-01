@@ -1,6 +1,5 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List
 
 from langchain_community.document_loaders import (
     CSVLoader,
@@ -28,7 +27,7 @@ KNOWLEDGE_EMBEDDING_COLLECTION = "knowledge_embedding"
 
 
 class MyElmLoader(UnstructuredEmailLoader):
-    def load(self) -> List[Document]:
+    def load(self) -> list[Document]:
         try:
             try:
                 doc = UnstructuredEmailLoader.load(self)
@@ -65,7 +64,7 @@ LOADER_MAPPING = {
 }
 
 
-def load_single_document(file_path: str) -> List[Document]:
+def load_single_document(file_path: str) -> list[Document]:
     ext = "." + file_path.rsplit(".", 1)[-1]
     if ext in LOADER_MAPPING:
         logger.info(f"加载文件类型:{ext}")
@@ -79,7 +78,7 @@ def load_single_document(file_path: str) -> List[Document]:
     raise ValueError(f"Unsupported file extension '{ext}'")
 
 
-def process_single_doc(file_path: str) -> List[Document]:
+def process_single_doc(file_path: str) -> list[Document]:
     docs = load_single_document(file_path)
     texts = []
     if not docs:
@@ -95,14 +94,14 @@ def process_single_doc(file_path: str) -> List[Document]:
 
 
 class KnowledgeDocIndex(BaseModule, ABC):
-    collections: List[str]
+    collections: list[str]
 
     def __init__(self, system: System):
         super().__init__(system)
         self.system = system
 
     @abstractmethod
-    def query_doc(self, query_texts: str, source: List[str], collection: str, num_results: int):
+    def query_doc(self, query_texts: str, source: list[str], collection: str, num_results: int):
         pass
 
     @abstractmethod
@@ -114,5 +113,5 @@ class KnowledgeDocIndex(BaseModule, ABC):
         pass
 
     @abstractmethod
-    def delete_doc_ids(self, ids: List[str], collection: str):
+    def delete_doc_ids(self, ids: list[str], collection: str):
         pass

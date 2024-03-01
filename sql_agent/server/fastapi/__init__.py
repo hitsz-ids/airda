@@ -12,7 +12,7 @@ from sql_agent.protocol import (
 
 
 async def upload_file_form(
-    file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
+        file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
 ):
     return CompletionKnowledgeLoadRequest(
         file=file, file_id=file_id, file_name=file_name
@@ -75,20 +75,20 @@ class FastAPIServer(WebFrameworkServer):
         return await self._api.create_completion(request)
 
     async def instruction_sync(
-        self,
-        request: CompletionInstructionSyncRequest,
-        background_tasks: BackgroundTasks,
+            self,
+            request: CompletionInstructionSyncRequest,
+            background_tasks: BackgroundTasks,
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
     async def datasource_add(
-        self, background_tasks: BackgroundTasks, request: DatasourceAddRequest
+            self, background_tasks: BackgroundTasks, request: DatasourceAddRequest
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
     async def knowledge_train(
-        self,
-        background_tasks: BackgroundTasks,
-        request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
+            self,
+            background_tasks: BackgroundTasks,
+            request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
     ):
         await self._api.knowledge_train(request, background_tasks)

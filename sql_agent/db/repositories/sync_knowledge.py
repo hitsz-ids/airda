@@ -1,5 +1,3 @@
-from typing import Union
-
 from bson.objectid import ObjectId
 
 from sql_agent.db.repositories.types import InstructionEmbeddingRecord as EmbeddingRecord
@@ -19,7 +17,7 @@ class KnowledgeSyncRepository:
         )
         return embedding_record
 
-    def find_one(self, query: dict) -> Union[EmbeddingRecord, None]:
+    def find_one(self, query: dict) -> EmbeddingRecord | None:
         row = self.storage.find_one(SYNC_EMBEDDING_COLLECTION, query)
         if not row:
             return None
