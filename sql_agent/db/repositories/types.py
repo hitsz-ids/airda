@@ -51,3 +51,17 @@ class InstructionEmbeddingRecord(BaseModel):
     id: Union[str, None] = None
     datasource_id: str
     status: int = DBEmbeddingStatus.EMBEDDING.value
+
+
+class KnowledgeEmbeddingStatus(Enum):
+    EMBEDDING = 1
+    SUCCESS = 2
+    FAILED = 3
+    STOP = 4
+
+
+class KnowledgeEmbeddingRecord(BaseModel):
+    id: Union[str, None] = None
+    file_path: str
+    file_id: str
+    status: int = KnowledgeEmbeddingStatus.EMBEDDING.value

@@ -12,6 +12,7 @@ from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.db.repositories.sync_instructions import (
     InstructionEmbeddingRecordRepository,
 )
+from sql_agent.db.repositories.sync_knowledge import KnowledgeSyncRepository
 from sql_agent.db.repositories.types import (
     Datasource,
     DBEmbeddingStatus,
@@ -56,6 +57,8 @@ class APIImpl(API):
         super().__init__(system)
         self.system = system
         self.storage = self.system.get_instance(DB)
+        self.csv_file_suffix = "_knowledge.csv"
+        self.doc_collection = "doc_collection"
         self.doc_index = self.system.get_instance(KnowledgeDocIndex)
         self.embedding_model = EmbeddingModel()
 
@@ -115,6 +118,8 @@ class APIImpl(API):
             logger.info("文件不存在")
             return create_error_response(404, "文件不存在")
         file_name = request.file_name
+        knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
+        knowledge_sync_repository.insert()
         background_tasks.add_task(self.load_file_vector_store, file_path, file_id, file_name)
         return True
 
@@ -247,11 +252,13 @@ class APIImpl(API):
 
     def load_file_vector_store(self, file_path, file_id, file_name):
         logger.info(f"知识库文件上传: {file_name}")
-        is_used = 0  # 未使用
         # 当前版本限制为csv文件.
         extension = file.get_file_extension(file_name)
-
-        background_tasks.add_task(self.load_file_vector_store, file_path, file_id, file_name)
+        if extension != "csv":
+            return BaseResponse(msg="暂不支持csv以外文档", code=10003, data={})
+        else:
+            knowledge_csv = self.generator_knowledge_csv(file_path)
+            self.doc_index.upload_doc(knowledge_csv, self.doc_collection)
         # 1.增加同步状态,同步完后修改为成功
         os.remove(file_path)
 
@@ -259,3 +266,23 @@ class APIImpl(API):
         instruction_repository = InstructionRepository(self.storage)
         for instruction in instructions:
             instruction_repository.insert(instruction)
+
+    def generator_knowledge_csv(self, file_path: str) -> str:
+        df = pd.read_csv(file_path)
+        new_df = pd.DataFrame()
+        new_df["knowledge"] = (
+            df.iloc[:, 0].astype(str)
+            + "包含"
+            + df.iloc[:, 1].astype(str)
+            + ","
+            + df.iloc[:, 1].astype(str)
+            + "包含有"
+            + df.iloc[:, 2].astype(str)
+            + ","
+            + df.iloc[:, 2].astype(str)
+            + "的计算方法是"
+            + df.iloc[:, 3].astype(str)
+        )
+        knowledge_csv = file_path.replace(".csv", self.csv_file_suffix)
+        new_df.to_csv(knowledge_csv, index=False)
+        return knowledge_csv

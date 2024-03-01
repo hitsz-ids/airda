@@ -5,7 +5,6 @@ from typing import List
 from overrides import override
 
 from sql_agent import setting
-from sql_agent.setting import System
 from sql_agent.db import DB
 from sql_agent.db.repositories.knowledge import KnowledgeRepository
 from sql_agent.db.repositories.types import Knowledge
@@ -13,6 +12,7 @@ from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.rag import schema_linking
 from sql_agent.rag.knowledge import KnowledgeDocIndex, process_single_doc
 from sql_agent.rag.knowledge.types import Document
+from sql_agent.setting import System
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class MongoDoc(KnowledgeDocIndex):
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
         self.knowledge_repository = KnowledgeRepository(system.get_instance(DB))
-        self.process_pool = config.process_pool
+        self.process_pool = setting.process_pool
 
     @override
     def query_doc(self, query_texts: str, source: List[str], collection: str, num_results: int):
@@ -83,7 +83,9 @@ class MongoDoc(KnowledgeDocIndex):
             for text in texts:
                 content_embedding = self.embedding_model.embed_query(text.page_content).tolist()
                 knowledge = Knowledge(
-                    source=file_path, content=text.page_content, content_embedding=content_embedding
+                    source=file_path,
+                    content=text.page_content,
+                    content_embedding=content_embedding,
                 )
                 self.knowledge_repository.insert(knowledge)
 
