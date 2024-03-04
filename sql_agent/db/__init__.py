@@ -3,10 +3,7 @@ from abc import ABC, abstractmethod
 from sql_agent.setting import BaseModule, System
 
 
-class DB(BaseModule, ABC):
-    @abstractmethod
-    def __init__(self, system: System):
-        self.system = system
+class DB(BaseModule):
 
     @abstractmethod
     def insert_one(self, collection: str, obj: dict) -> int:
@@ -34,12 +31,12 @@ class DB(BaseModule, ABC):
 
     @abstractmethod
     def find(
-        self,
-        collection: str,
-        query: dict,
-        sort: list = None,
-        page: int = 0,
-        limit: int = 0,
+            self,
+            collection: str,
+            query: dict,
+            sort: list = None,
+            page: int = 0,
+            limit: int = 0,
     ) -> list:
         pass
 

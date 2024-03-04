@@ -1,9 +1,11 @@
 import logging
 import os
+from typing import Generator, Any
 
 from bson import ObjectId
 from fastapi import BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+
 from overrides import override
 
 from sql_agent.setting import System
@@ -35,6 +37,8 @@ from sql_agent.utils import file
 
 logger = logging.getLogger(__name__)
 
+system = System()
+
 
 def create_error_response(code: int, message: str) -> JSONResponse:
     return JSONResponse(
@@ -45,40 +49,48 @@ def create_error_response(code: int, message: str) -> JSONResponse:
 def paginate_array(array, page_size):
     result = []
     for i in range(0, len(array), page_size):
-        result.append(array[i : i + page_size])
+        result.append(array[i: i + page_size])
     return result
 
     # 示例用法
 
 
 class APIImpl(API):
-    def __init__(self, system: System):
-        super().__init__(system)
+    def __init__(self, *args):
+        super().__init__()
         self.system = system
-        self.storage = self.system.get_instance(DB)
-        self.doc_index = self.system.get_instance(KnowledgeDocIndex)
+        self.storage = self.system.get_module(DB)
+        self.doc_index = self.system.get_module(KnowledgeDocIndex)
         self.embedding_model = EmbeddingModel()
 
     @override
     async def create_completion(self, request: ChatCompletionRequest):
-        knowledge_index = request.knowledge
-        datasource = request.datasource
-        database = request.database
-        # 考虑是否本地缓存对话结果
-        question = request.messages
-        # 判断数据源,数据库是否存在
-
+        # knowledge_index = request.knowledge
+        # datasource = request.datasource
+        # database = request.database
         # 获取知识库内容
-        knowledge = self.doc_index.query_doc(question)
-        # 获取assistants
-        planner = Planner()
-        task = planner.plan(question)
-        for item in task.execute():
-            yield item
+        # knowledge = self.doc_index.query_doc(question)
+
         """ 获得规划后进行执行.
         方案1.按照langchain agent式进行调用.
         方案2.按照metagpt的方式,让assistant自己进行处理与调用
         """
+        generator = self.content_stream(request)
+        return StreamingResponse(generator, media_type="text/event-stream")
+
+    async def content_stream(self, request: ChatCompletionRequest):
+        question = request.messages
+        # 获取assistants
+        planner = Planner()
+        tasks = planner.plan('')
+        gen = tasks.execute(self.system, self.storage)
+        i = next(gen)
+        try:
+            while True:
+                result = gen.send(i)
+                i = result
+        except StopIteration as e:
+            print(e.value)
 
     @override
     async def datasource_add(self, request: DatasourceAddRequest):
@@ -99,11 +111,11 @@ class APIImpl(API):
 
     @override
     async def knowledge_train(
-        self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
+            self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
     ):
         # 保存文件到指定路径
         file_contents = await request.file.read()
-        save_path = f"{self.system.settings.knowledge_path}/{request.file_id}"
+        save_path = f"{self.system._env_settings.knowledge_path}/{request.file_id}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         file_path = f"{save_path}/{request.file_name}"
@@ -122,9 +134,9 @@ class APIImpl(API):
 
     @override
     async def instruction_sync(
-        self,
-        request: CompletionInstructionSyncRequest,
-        background_tasks: BackgroundTasks,
+            self,
+            request: CompletionInstructionSyncRequest,
+            background_tasks: BackgroundTasks,
     ):
         instructions = request.instructions
         if instructions:
@@ -139,8 +151,8 @@ class APIImpl(API):
             {"datasource_id": datasource_id}
         )
         if (
-            sync_embedding_record is None
-            or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
+                sync_embedding_record is None
+                or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
         ):
             return True
         instruction_repository = InstructionRepository(self.storage)

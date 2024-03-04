@@ -8,13 +8,14 @@ class Task:
     _question: str = ""
 
     def __init__(self, question: str, steps: list[Assistant]):
-        self._steps = steps
         self._question = question
+        self._steps = steps
 
     def execute(self) -> Generator:
         for item in self._steps:
-            for action_result in item.run(self._question):
-                yield action_result
+            print('item:', item)
+            yield from item.run(self._question)
+        yield "[DONE]"
 
     def stop(self):
         pass

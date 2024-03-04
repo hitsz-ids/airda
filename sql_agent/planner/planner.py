@@ -59,10 +59,8 @@ class Planner(Assistant):
             plan: [{name:"", actions: [], type: "ChatAssistant"}, {name:"", actions: [], type: "SqlAssistant"}]
         }
         """
-        if chat_type == "1":
-            plan_result = ["Chat"]
-        else:
-            plan_result = ["SQL"]
+
+        plan_result = ["Chat", "SQL"]
         assistants = create_assistants(plan_result)
         return Task(question, assistants)
 

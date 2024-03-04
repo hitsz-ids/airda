@@ -30,9 +30,7 @@ class FastAPIServer(WebFrameworkServer):
 
     @overrides
     def run_server(self):
-        self.add_routes(self.app)
         import uvicorn
-
         uvicorn.run(
             self.app,
             host=self.host,
@@ -72,7 +70,7 @@ class FastAPIServer(WebFrameworkServer):
         self.app.include_router(self.router)
 
     async def create_completion(self, request: ChatCompletionRequest):
-        return await self._api.create_completion(request)
+        return self._api.create_completion(request)
 
     async def instruction_sync(
             self,

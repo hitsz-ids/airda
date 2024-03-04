@@ -19,7 +19,7 @@ def calc_score(query_embedding, search_embedding):
         [len(search_embedding), len(max(search_embedding, key=lambda x: len(x))), 1024]
     )
     for i, j in enumerate(search_embedding):
-        new_arr[i][0 : len(j)] = j
+        new_arr[i][0: len(j)] = j
 
     product = np.einsum("ijk,lk->ilj", new_arr, query_embedding)
     max_score = np.max(product, axis=2)
@@ -27,7 +27,7 @@ def calc_score(query_embedding, search_embedding):
 
 
 def calc_similarity(
-    query_embedding, table_embedding, columns_embedding, table_weight=30
+        query_embedding, table_embedding, columns_embedding, table_weight=30
 ):
     if not table_embedding or not columns_embedding:
         return [0]
@@ -53,16 +53,18 @@ def do_calc_similarity(args):
     return batch_tables, batch_score
 
 
+system = System()
+
+
 class SchemaLinking:
     embedding_model = ""
 
-    def __init__(self, system: System):
-        self.system = system
-        self.storage = self.system.get_instance(DB)
+    def __init__(self):
+        self.storage = system.get_module(DB)
         self.embedding_model = EmbeddingModel()
 
     def search(
-        self, question: str, db_connection_id: str, database: str
+            self, question: str, db_connection_id: str, database: str
     ) -> Tuple[list[str], list[str]]:
         logger.info("开始查询相似表")
         question_embedding = self._embedding_question(question)
@@ -74,7 +76,7 @@ class SchemaLinking:
         return self._filter_results(sorted_result, all_scores)
 
     def _retrieve_db_embeddings(
-        self, question_embedding, db_connection_id: str, database: str
+            self, question_embedding, db_connection_id: str, database: str
     ):
         page = 1
         limit = 5

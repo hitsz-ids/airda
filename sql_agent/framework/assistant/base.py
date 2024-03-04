@@ -20,6 +20,7 @@ class Assistant:
     def run(self, question: str) -> Generator:
         size = len(self._actions)
         for i in range(size):
+            i = yield i
             action = self._actions[i](question)
             self.prepare(action)
             self._currentActionIndex = i
