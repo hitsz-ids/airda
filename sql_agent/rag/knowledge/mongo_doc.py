@@ -1,6 +1,5 @@
 import concurrent.futures
 import logging
-from typing import List
 
 from overrides import override
 
@@ -12,7 +11,7 @@ from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.rag import schema_linking
 from sql_agent.rag.knowledge import KnowledgeDocIndex, process_single_doc
 from sql_agent.rag.knowledge.types import Document
-from sql_agent.setting import System
+from sql_agent.setting import System, process_pool
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +38,10 @@ class MongoDoc(KnowledgeDocIndex):
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
         self.knowledge_repository = KnowledgeRepository(system.get_instance(DB))
-        self.process_pool = setting.process_pool
+        self.process_pool = process_pool
 
     @override
-    def query_doc(self, query_texts: str, source: List[str], collection: str, num_results: int):
+    def query_doc(self, query_texts: str, source: list[str], collection: str, num_results: int):
         query_condition = {}
         if source:
             query_condition = {"source": {"$in": source}}
@@ -94,5 +93,5 @@ class MongoDoc(KnowledgeDocIndex):
         self.knowledge_repository.delete_by(condition)
 
     @override
-    def delete_doc_ids(self, ids: List[str], collection: str):
+    def delete_doc_ids(self, ids: list[str], collection: str):
         pass

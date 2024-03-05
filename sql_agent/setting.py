@@ -4,18 +4,19 @@ import inspect
 import os
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, Type, TypeVar, Union, cast
+from typing import Any, Type, TypeVar, cast
 
 from dotenv import load_dotenv
 from overrides import EnforceOverrides
+from pydantic.v1 import BaseSettings
 
-setting_class_keys: Dict[str, str] = {
+setting_class_keys: dict[str, str] = {
     "sql_agent.server.api.API": "api_impl",
     "sql_agent.db.DB": "db_impl",
     # "sql_agent.model.llm.LLM": "llm_impl",
     # "sql_agent.vector_store.VectorStore": "vector_store_impl",
-    "sql_agent.vector_store.doc_index.DocIndex": "doc_index_impl",
-    "sql_agent.context_store.ContextStore": "context_store_impl",
+    "sql_agent.rag.knowledge.KnowledgeDocIndex": "doc_index_impl",
+    # "sql_agent.context_store.ContextStore": "context_store_impl",
 }
 
 
@@ -27,33 +28,37 @@ class LogLevel(Enum):
     DEBUG = "debug"
 
 
-class EnvSettings:
-
+class EnvSettings(BaseSettings):
     load_dotenv()
     api_impl: str = os.getenv("API_IMPL", "sql_agent.server.fastapi")
     db_impl: str = os.getenv("DB", "sql_agent.db.mongo.MongoDB")
 
-    # vector_store_impl: str = os.getenv()(
+    # vector_store_impl: str = os.getenv(
     #     "VECTOR_STORE", "sql_agent.vector_store.chroma.Chroma"
     # )
-    # llm_impl: str = os.getenv()("LLM", "sql_agent.model.llm.vanus.Vanus")
+    # llm_impl: str = os.getenv("LLM", "sql_agent.model.llm.vanus.Vanus")
     doc_index_impl: str = os.getenv(
-        "DocIndex", "sql_agent.vector_store.doc_index.mongo_doc.MongoDoc"
+        "DocIndex", "sql_agent.rag.knowledge.mongo_doc.MongoDoc"
     )
-    context_store_impl: str = os.getenv(
-        "CONTEXT_STORE", "sql_agent.context_store.default.DefaultContextStore"
-    )
+    # context_store_impl: str = os.getenv(
+    #     "CONTEXT_STORE", "sql_agent.context_store.default.DefaultContextStore"
+    # )
     log_level_str = os.getenv("LOG_LEVEL", "INFO")
-    log_level: LogLevel = getattr(LogLevel, log_level_str.upper(), LogLevel.INFO)
-    db_name: Union[str, None] = os.getenv("MONGODB_DB_NAME")
-    db_uri: Union[str, None] = os.getenv("MONGODB_URI")
-    openai_api_key: Union[str, None] = os.getenv("OPENAI_KEY")
+    try:
+        # 先尝试获取枚举成员
+        log_level: str = LogLevel[log_level_str.upper()].value
+    except KeyError:
+        # 如果失败，使用默认值
+        log_level: str = LogLevel.INFO.value
+    db_name: str | None = os.getenv("MONGODB_DB_NAME")
+    db_uri: str | None = os.getenv("MONGODB_URI")
+    openai_api_key: str | None = os.getenv("OPENAI_KEY")
     encrypt_key: str = os.getenv("ENCRYPT_KEY")
-    application_id: Union[str, None] = os.getenv("APPID")
+    application_id: str | None = os.getenv("APPID")
     model_name: str = os.getenv("model_name")
 
-    embeddings_model_name: Union[str, None] = os.getenv("EMBEDDINGS_MODEL_NAME")
-    knowledge_path: Union[str, None] = os.getenv("KNOWLEDGE_PATH")
+    embeddings_model_name: str | None = os.getenv("EMBEDDINGS_MODEL_NAME")
+    knowledge_path: str | None = os.getenv("KNOWLEDGE_PATH")
 
     def get(self, key: str) -> Any:
         val = self[key]
@@ -86,32 +91,32 @@ class BaseModule(ABC, EnforceOverrides):
 
 class System(BaseModule):
     env_settings: EnvSettings
-    _instances: Dict[Type[BaseModule], BaseModule]
+    _instances: dict[Type[BaseModule], BaseModule]
 
     def __init__(self, settings: EnvSettings):
         self.settings = settings
         self._instances = {}
         super().__init__(self)
 
-    def get_instance(self, type: Type[T]) -> T:
+    def get_instance(self, class_type: Type[T]) -> T:
         """Return an instance of the component type specified. If the system is running,
         the component will be started as well."""
 
-        if inspect.isabstract(type):
-            class_full_name = get_class_full_name(type)
+        if inspect.isabstract(class_type):
+            class_full_name = get_class_full_name(class_type)
             if class_full_name not in setting_class_keys:
-                raise ValueError(f"Cannot instantiate abstract type: {type}")
+                raise ValueError(f"Cannot instantiate abstract type: {class_type}")
             key = setting_class_keys[class_full_name]
             import_path = self.settings.get(key)
-            type = get_class_type(import_path)
+            class_type = get_class_type(import_path)
 
-        if type not in self._instances:
-            impl = type(self)
-            self._instances[type] = impl
+        if class_type not in self._instances:
+            impl = class_type(self)
+            self._instances[class_type] = impl
             if self._loaded:
                 impl.start()
 
-        inst = self._instances[type]
+        inst = self._instances[class_type]
         return cast(T, inst)
 
 

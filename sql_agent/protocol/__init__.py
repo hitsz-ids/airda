@@ -1,5 +1,3 @@
-from typing import Dict, List, Union
-
 from fastapi import File, UploadFile
 from pydantic import BaseModel
 
@@ -13,7 +11,7 @@ class ErrorResponse(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    messages: Union[str, List[Dict[str, str]]]
+    messages: str | list[dict[str, str]]
     datasource: str
     database: str
     knowledge: str
@@ -33,11 +31,11 @@ class DatasourceAddRequest(BaseModel):
     database: str
     user_name: str
     password: str
-    config: Union[Dict[str, str], None] = None
+    config: dict[str, str] | None = None
 
 
 class CompletionInstructionSyncRequest(BaseModel):
-    instructions: Union[str, List[Instruction]]
+    instructions: str | list[Instruction]
     datasource_id: str
 
 

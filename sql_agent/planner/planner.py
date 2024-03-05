@@ -1,4 +1,4 @@
-from typing import Dict, Type
+from typing import Type
 
 from sql_agent.assistants.chat_assistant.assistant import ChatAssistant
 from sql_agent.assistants.sql_assistant.assistant import SqlAssistant
@@ -6,7 +6,7 @@ from sql_agent.framework.assistant.action.base import Action
 from sql_agent.framework.assistant.base import Assistant
 from sql_agent.planner.task import Task
 
-assistant_map: Dict[str, Type[Assistant]] = {"Chat": ChatAssistant, "SQL": SqlAssistant}
+assistant_map: dict[str, Type[Assistant]] = {"Chat": ChatAssistant, "SQL": SqlAssistant}
 
 
 def create_assistants(plan_result: list[str]) -> list[Assistant]:
