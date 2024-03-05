@@ -5,7 +5,7 @@ from sql_agent.db.repositories.types import Knowledge
 KNOWLEDGE_EMBEDDING_COLLECTION = "knowledge_embedding"
 
 
-class KnowledgeRepository:
+class KnowledgeStorage:
     def __init__(self, storage):
         self.storage = storage
 

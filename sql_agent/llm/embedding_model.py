@@ -5,17 +5,16 @@ import numpy as np
 from sklearn.preprocessing import normalize
 from transformers import AutoModel, AutoTokenizer
 
+from sql_agent.framework.types import Singleton
+
 logger = logging.getLogger(__name__)
 
 
-class EmbeddingModel:
-    _instance = None
+class EmbeddingModel(metaclass=Singleton):
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            cls._instance = super(EmbeddingModel, cls).__new__(cls)
-            cls._instance._init_model()
-        return cls._instance
+    def __init__(self) -> None:
+        super().__init__()
+        self._init_model()
 
     def _init_model(self):
         model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "infgrad/stella-large-zh-v2")

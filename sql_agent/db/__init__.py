@@ -1,9 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from sql_agent.setting import BaseModule, System
+from sql_agent.setting import BaseModule
 
 
-class DB(BaseModule):
+class Storage(BaseModule):
 
     @abstractmethod
     def insert_one(self, collection: str, obj: dict) -> int:

@@ -7,14 +7,14 @@ system = System()
 
 
 class WebFrameworkServer(ABC):
-    def __init__(self, host="0.0.0.0", port=8080):
+    def __init__(self, host="0.0.0.0", port=8888):
         self.host = host
         self.port = port
         self.app = self.create_app()
         self.settings = env_settings
         self.system = system
         self._api = self.init_api()
-        self.add_routes(self.app)
+        self.add_routes()
 
     @abstractmethod
     def create_app(self):
@@ -25,7 +25,7 @@ class WebFrameworkServer(ABC):
         pass
 
     @abstractmethod
-    def add_routes(self, app):
+    def add_routes(self):
         pass
 
     def init_api(self):

@@ -7,10 +7,8 @@ from enum import Enum
 from typing import Any, Type, TypeVar, cast
 
 from dotenv import load_dotenv
-from overrides import EnforceOverrides
-from pydantic.v1 import BaseSettings
 
-from sql_agent.utils.common import Singleton
+from sql_agent.framework.types import Singleton
 
 
 class LogLevel(Enum):
@@ -41,28 +39,40 @@ class BaseModule(ABC):
         self._loaded = True
 
 
+setting_module_keys: dict[str, str] = {
+    "sql_agent.server.api.API": "api_impl",
+    "sql_agent.db.Storage": "storage_impl",
+    "sql_agent.rag.knowledge.service.KnowledgeService": "knowledge_service",
+    # "sql_agent.model.llm.LLM": "llm_impl",
+    # "sql_agent.vector_store.VectorStore": "vector_store_impl",
+    # "sql_agent.context_store.ContextStore": "context_store_impl",
+}
+
+
 class EnvSettings(metaclass=Singleton):
     load_dotenv()
+
     api_impl: str = os.getenv("API_IMPL", "sql_agent.server.fastapi")
-    db_impl: str = os.getenv("DB", "sql_agent.db.mongo.MongoDB")
+    storage_impl: str = os.getenv("DB", "sql_agent.db.mongo.MongoStorage")
+
+    knowledge_service: str = os.getenv(
+        "KNOWLEDGE_SERVICE", "sql_agent.rag.knowledge.service.KnowledgeService"
+    )
 
     # vector_store_impl: str = os.getenv(
     #     "VECTOR_STORE", "sql_agent.vector_store.chroma.Chroma"
     # )
-    # llm_impl: str = os.getenv("LLM", "sql_agent.model.llm.vanus.Vanus")
-    doc_index_impl: str = os.getenv(
-        "DocIndex", "sql_agent.rag.knowledge.mongo_doc.MongoDoc"
-    )
     # context_store_impl: str = os.getenv(
     #     "CONTEXT_STORE", "sql_agent.context_store.default.DefaultContextStore"
     # )
+    # llm_impl: str = os.getenv("LLM", "sql_agent.model.llm.vanus.Vanus")
+
     log_level_str = os.getenv("LOG_LEVEL", "INFO")
     try:
-        # 先尝试获取枚举成员
         log_level: str = LogLevel[log_level_str.upper()].value
     except KeyError:
-        # 如果失败，使用默认值
         log_level: str = LogLevel.INFO.value
+
     db_name: str | None = os.getenv("MONGODB_DB_NAME")
     db_uri: str | None = os.getenv("MONGODB_URI")
     openai_api_key: str | None = os.getenv("OPENAI_KEY")
@@ -81,16 +91,6 @@ class EnvSettings(metaclass=Singleton):
 
     def __getitem__(self, key: str) -> Any:
         return getattr(self, key, "")
-
-
-setting_module_keys: dict[str, str] = {
-    "sql_agent.server.api.API": "api_impl",
-    "sql_agent.db.DB": "db_impl",
-    # "sql_agent.model.llm.LLM": "llm_impl",
-    # "sql_agent.vector_store.VectorStore": "vector_store_impl",
-    "sql_agent.rag.knowledge.KnowledgeDocIndex": "doc_index_impl",
-    # "sql_agent.context_store.ContextStore": "context_store_impl",
-}
 
 
 def get_class_type(import_path: str) -> Type[M]:
@@ -114,7 +114,7 @@ class System(metaclass=Singleton):
 
     def __init__(self):
         super().__init__()
-        self._env_settings = env_settings
+        self.env_settings = env_settings
 
     def get_module(self, module_type: Type[T]) -> T:
         """Return an instance of the component type specified. If the system is running,
@@ -125,7 +125,7 @@ class System(metaclass=Singleton):
             if module_full_name not in setting_module_keys:
                 raise ValueError(f"module: {module_type}, not in setting_module_keys")
             key = setting_module_keys[module_full_name]
-            import_path = self._env_settings.get(key)
+            import_path = self.env_settings.get(key)
             module_type = get_class_type(import_path)
 
         if module_type not in self._cache_modules:

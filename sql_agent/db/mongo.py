@@ -7,13 +7,12 @@ from pymongo import MongoClient
 from pymongo.typings import _DocumentType
 
 from sql_agent.setting import System, env_settings
-from sql_agent.db import DB
+from sql_agent.db import Storage
 
 system = System()
 
 
-class MongoDB(DB):
-    client: MongoClient
+class MongoStorage(Storage):
 
     def __init__(self):
         super().__init__()

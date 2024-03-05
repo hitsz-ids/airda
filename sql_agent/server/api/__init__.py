@@ -24,14 +24,26 @@ class API(BaseModule, ABC):
 
     @abstractmethod
     async def instruction_sync(
-        self,
-        request: CompletionInstructionSyncRequest,
-        background_tasks: BackgroundTasks,
+            self,
+            request: CompletionInstructionSyncRequest,
+            background_tasks: BackgroundTasks,
     ):
         pass
 
     @abstractmethod
     async def knowledge_train(
-        self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
+            self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
+    ):
+        pass
+
+    @abstractmethod
+    async def instruction_sync_status(
+            self, request: CompletionInstructionSyncStatusRequest
+    ):
+        pass
+
+    @abstractmethod
+    async def instruction_sync_stop(
+            self, request: CompletionInstructionSyncStatusRequest
     ):
         pass

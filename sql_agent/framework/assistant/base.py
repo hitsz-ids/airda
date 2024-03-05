@@ -1,31 +1,39 @@
 from abc import abstractmethod
-from typing import Generator
+from typing import Any, Generator
+
+from pydantic import BaseModel
 
 from sql_agent.framework.assistant.action import ActionStatus
 from sql_agent.framework.assistant.action.base import Action
+from sql_agent.protocol import ChatCompletionRequest
 
 
 class Assistant:
     _actions: list[type[Action]]
     _currentActionIndex: int
-    _question: str
+    _request: ChatCompletionRequest
+    _actions_results: dict[str, dict]
 
-    def __init__(self):
+    def __init__(self, request):
         self._actions = self.init_actions()
+        self._request = request
 
     @abstractmethod
     def init_actions(self) -> list[type[Action]]:
         pass
 
-    def run(self, question: str) -> Generator:
+    def run(self) -> Generator:
         size = len(self._actions)
         for i in range(size):
-            i = yield i
-            action = self._actions[i](question)
+            action = self._actions[i](self._request)
             self.prepare(action)
             self._currentActionIndex = i
             action.execute()
-            yield action.get_result()
+            name = action.get_name()
+            result = action.get_result()
+            output = {name: result}
+            self._actions_results[name] = result
+            yield output
             intercepted = self.complete(action)
             if intercepted:
                 break

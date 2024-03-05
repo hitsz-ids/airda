@@ -1,5 +1,5 @@
-import logging
 from abc import ABC, abstractmethod
+import logging
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
@@ -16,8 +16,9 @@ from langchain_community.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
+from sql_agent.setting import System
 from sql_agent.rag.knowledge.types import Document
-from sql_agent.setting import BaseModule, System
+from sql_agent.setting import System
 
 logger = logging.getLogger(__name__)
 chunk_size = 500
@@ -91,23 +92,24 @@ def process_single_doc(file_path: str) -> list[Document]:
     )
     logger.info(f"开始切分文件:{file_path}")
     texts = text_splitter.split_documents(docs)
-    logger.info(f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)")
+    logger.info(
+        f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)"
+    )
     return texts
 
 
-class KnowledgeDocIndex(BaseModule):
+class KnowledgeService(ABC):
     collections: list[str]
 
     def __init__(self):
-        super().__init__()
         self.system = system
 
     @abstractmethod
-    def query_doc(self, query_texts: str, source: list[str], collection: str, num_results: int):
+    def query_doc(self, query_texts: str, source: list[str], num_results: int):
         pass
 
     @abstractmethod
-    def upload_doc(self, file_path: str, collection: str):
+    def upload_doc(self, file_path: str):
         pass
 
     @abstractmethod
@@ -115,5 +117,5 @@ class KnowledgeDocIndex(BaseModule):
         pass
 
     @abstractmethod
-    def delete_doc_ids(self, ids: list[str], collection: str):
+    def delete_doc_ids(self, ids: list[str]):
         pass

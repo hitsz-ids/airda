@@ -148,7 +148,7 @@ CPU：8核
     -H 'accept: application/json' \
     -H 'Content-Type: application/json' \
     -d '{
-    "db_connection_id": "db_connection_id",
+    "datasource_id": "datasource_id",
     "table_names": ["table_name"]
     }'
 

@@ -16,11 +16,13 @@ from sql_agent.protocol import (
 async def upload_file_form(
     file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
 ):
-    return CompletionKnowledgeLoadRequest(file=file, file_id=file_id, file_name=file_name)
+    return CompletionKnowledgeLoadRequest(
+        file=file, file_id=file_id, file_name=file_name
+    )
 
 
 class FastAPIServer(WebFrameworkServer):
-    def __init__(self, host="0.0.0.0", port=8080):
+    def __init__(self, host="0.0.0.0", port=8888):
         super().__init__(host, port)
         self.router = None
 
@@ -40,7 +42,7 @@ class FastAPIServer(WebFrameworkServer):
         )
 
     @overrides
-    def add_routes(self, app):
+    def add_routes(self):
         self.router = fastapi.APIRouter()
         self.router.add_api_route(
             "/v1/chat/completions",
@@ -84,7 +86,7 @@ class FastAPIServer(WebFrameworkServer):
         self.app.include_router(self.router)
 
     async def create_completion(self, request: ChatCompletionRequest):
-        return self._api.create_completion(request)
+        return await self._api.create_completion(request)
 
     async def instruction_sync(
         self,
@@ -93,10 +95,14 @@ class FastAPIServer(WebFrameworkServer):
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
-    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
+    async def instruction_sync_status(
+        self, request: CompletionInstructionSyncStatusRequest
+    ):
         return await self._api.instruction_sync_status(request)
 
-    async def instruction_sync_stop(self, request: CompletionInstructionSyncStopRequest):
+    async def instruction_sync_stop(
+        self, request: CompletionInstructionSyncStopRequest
+    ):
         return await self._api.instruction_sync_stop(request)
 
     async def datasource_add(self, request: DatasourceAddRequest):

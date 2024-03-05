@@ -13,7 +13,7 @@ class InstructionRepository:
 
     def insert(self, instruction: Instruction) -> Instruction:
         instruction_dict = instruction.dict(exclude={"id"})
-        instruction_dict["db_connection_id"] = ObjectId(instruction.db_connection_id)
+        instruction_dict["datasource_id"] = ObjectId(instruction.datasource_id)
         instruction.id = str(self.storage.insert_one(DB_COLLECTION, instruction_dict))
 
         return instruction
@@ -23,12 +23,12 @@ class InstructionRepository:
         if not row:
             return None
         row["id"] = str(row["_id"])
-        row["db_connection_id"] = str(row["db_connection_id"])
+        row["datasource_id"] = str(row["datasource_id"])
         return Instruction(**row)
 
     def update(self, instruction: Instruction) -> Instruction:
         instruction_dict = instruction.dict(exclude={"id"})
-        instruction_dict["db_connection_id"] = ObjectId(instruction.db_connection_id)
+        instruction_dict["datasource_id"] = ObjectId(instruction.datasource_id)
 
         self.storage.update_or_create(
             DB_COLLECTION,
@@ -42,7 +42,7 @@ class InstructionRepository:
         if not row:
             return None
         row["id"] = str(row["_id"])
-        row["db_connection_id"] = str(row["db_connection_id"])
+        row["datasource_id"] = str(row["datasource_id"])
         return Instruction(**row)
 
     def find_by(self, query: dict, page: int = 1, limit: int = 10) -> list[Instruction]:
@@ -50,7 +50,7 @@ class InstructionRepository:
         result = []
         for row in rows:
             row["id"] = str(row["_id"])
-            row["db_connection_id"] = str(row["db_connection_id"])
+            row["datasource_id"] = str(row["datasource_id"])
             result.append(Instruction(**row))
         return result
 
@@ -59,7 +59,7 @@ class InstructionRepository:
         result = []
         for row in rows:
             row["id"] = str(row["_id"])
-            row["db_connection_id"] = str(row["db_connection_id"])
+            row["datasource_id"] = str(row["datasource_id"])
             result.append(Instruction(**row))
         return result
 
@@ -78,7 +78,7 @@ class InstructionRepository:
         if not row:
             return None
         row["id"] = str(row["_id"])
-        row["db_connection_id"] = str(row["db_connection_id"])
+        row["datasource_id"] = str(row["datasource_id"])
         return EmbeddingInstruction(**row)
 
     def find_embedding_by(
@@ -88,7 +88,7 @@ class InstructionRepository:
         result = []
         for row in rows:
             row["id"] = str(row["_id"])
-            row["db_connection_id"] = str(row["db_connection_id"])
+            row["datasource_id"] = str(row["datasource_id"])
             result.append(EmbeddingInstruction(**row))
         return result
 

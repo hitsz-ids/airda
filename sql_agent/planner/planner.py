@@ -5,16 +5,19 @@ from sql_agent.assistants.sql_assistant.assistant import SqlAssistant
 from sql_agent.framework.assistant.action.base import Action
 from sql_agent.framework.assistant.base import Assistant
 from sql_agent.planner.task import Task
+from sql_agent.protocol import ChatCompletionRequest
 
 assistant_map: dict[str, Type[Assistant]] = {"Chat": ChatAssistant, "SQL": SqlAssistant}
 
 
-def create_assistants(plan_result: list[str]) -> list[Assistant]:
+def create_assistants(
+    plan_result: list[str], request: ChatCompletionRequest
+) -> list[Assistant]:
     assistants: list[Assistant] = []
     for item in plan_result:
         try:
             assistant_class = assistant_map[item]
-            assistants.append(assistant_class())
+            assistants.append(assistant_class(request))
         except KeyError:
             print(f"未知的助手类型: {item}")
     return assistants
@@ -45,10 +48,7 @@ class Planner(Assistant):
     def init_actions(self) -> list[type[Action]]:
         return []
 
-    _question: str
-
-    def plan(self, question: str, chat_type: str = "2") -> Task:
-        self._question = question
+    def plan(self) -> Task:
         # TODO 加一个黄赌毒，涉政的检查
         # TODO 任务确认是否继续SQL、Chat、不相关（这版本前端选择）
         # 任务规划
@@ -61,8 +61,8 @@ class Planner(Assistant):
         """
 
         plan_result = ["Chat", "SQL"]
-        assistants = create_assistants(plan_result)
-        return Task(question, assistants)
+        assistants = create_assistants(plan_result, self._request)
+        return Task(assistants)
 
     def before(self, action: Action):
         pass

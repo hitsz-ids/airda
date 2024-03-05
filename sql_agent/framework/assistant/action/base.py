@@ -2,16 +2,17 @@ from abc import abstractmethod, ABC
 from typing import Any
 
 from sql_agent.framework.assistant.action import ActionStatus
+from sql_agent.protocol import ChatCompletionRequest
 
 
-class Action:
+class Action(ABC):
     _result: str = ""
-    _question: str = ""
+    _request: ChatCompletionRequest
     _name: str = ""
     _status: ActionStatus = ActionStatus.READY
 
-    def __init__(self, question: str):
-        self._question = question
+    def __init__(self, *args, **kwargs):
+        self._request = args[0]
         self._name = self.init_name()
 
     @abstractmethod
