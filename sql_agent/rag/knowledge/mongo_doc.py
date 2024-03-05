@@ -15,6 +15,8 @@ from sql_agent.setting import System, process_pool
 
 logger = logging.getLogger(__name__)
 
+system = System()
+
 
 def calculate_similarity(args):
     query_embedding, knowledge_list = args
@@ -33,11 +35,11 @@ def calculate_similarity(args):
 class MongoDoc(KnowledgeDocIndex):
     embedding_model = EmbeddingModel()
 
-    def __init__(self, system: System):
-        super().__init__(system)
+    def __init__(self):
+        super().__init__()
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
-        self.knowledge_repository = KnowledgeRepository(system.get_instance(DB))
+        self.knowledge_repository = KnowledgeRepository(system.get_module(DB))
         self.process_pool = process_pool
 
     @override

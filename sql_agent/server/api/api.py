@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from bson import ObjectId
 from fastapi import BackgroundTasks
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from overrides import override
 
 from sql_agent.db import DB
@@ -39,6 +39,8 @@ from sql_agent.utils import file
 
 logger = logging.getLogger(__name__)
 
+system = System()
+
 
 def create_error_response(code: int, message: str) -> JSONResponse:
     return JSONResponse(ErrorResponse(message=message, code=code).dict(), status_code=400)
@@ -54,10 +56,11 @@ def paginate_array(array, page_size):
 
 
 class APIImpl(API):
-    def __init__(self, system: System):
-        super().__init__(system)
+    def __init__(self):
+        super().__init__()
         self.system = system
-        self.storage = self.system.get_instance(DB)
+        self.storage = self.system.get_module(DB)
+        self.doc_index = self.system.get_module(KnowledgeDocIndex)
         self.csv_file_suffix = "_knowledge.csv"
         self.doc_collection = "doc_collection"
         self.doc_index = self.system.get_instance(KnowledgeDocIndex)
@@ -65,24 +68,32 @@ class APIImpl(API):
 
     @override
     async def create_completion(self, request: ChatCompletionRequest):
-        knowledge_index = request.knowledge
-        datasource = request.datasource
-        database = request.database
-        # 考虑是否本地缓存对话结果
-        question = request.messages
-        # 判断数据源,数据库是否存在
-
+        # knowledge_index = request.knowledge
+        # datasource = request.datasource
+        # database = request.database
         # 获取知识库内容
-        knowledge = self.doc_index.query_doc(question)
-        # 获取assistants
-        planner = Planner()
-        task = planner.plan(question)
-        for item in task.execute():
-            yield item
-        """ 获得规划后进行执行.
+        # knowledge = self.doc_index.query_doc(question)
+
+        """获得规划后进行执行.
         方案1.按照langchain agent式进行调用.
         方案2.按照metagpt的方式,让assistant自己进行处理与调用
         """
+        generator = self.content_stream(request)
+        return StreamingResponse(generator, media_type="text/event-stream")
+
+    async def content_stream(self, request: ChatCompletionRequest):
+        question = request.messages
+        # 获取assistants
+        planner = Planner()
+        tasks = planner.plan("")
+        gen = tasks.execute(self.system, self.storage)
+        i = next(gen)
+        try:
+            while True:
+                result = gen.send(i)
+                i = result
+        except StopIteration as e:
+            print(e.value)
 
     @override
     async def datasource_add(self, request: DatasourceAddRequest):
@@ -107,7 +118,7 @@ class APIImpl(API):
     ):
         # 保存文件到指定路径
         file_contents = await request.file.read()
-        save_path = f"{self.system.settings.knowledge_path}/{request.file_id}"
+        save_path = f"{self.system._env_settings.knowledge_path}/{request.file_id}"
         if not os.path.exists(save_path):
             os.makedirs(save_path)
         file_path = f"{save_path}/{request.file_name}"

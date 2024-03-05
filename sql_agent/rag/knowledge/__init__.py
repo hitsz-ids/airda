@@ -25,6 +25,8 @@ chunk_overlap = 50
 
 KNOWLEDGE_EMBEDDING_COLLECTION = "knowledge_embedding"
 
+system = System()
+
 
 class MyElmLoader(UnstructuredEmailLoader):
     def load(self) -> list[Document]:
@@ -93,11 +95,11 @@ def process_single_doc(file_path: str) -> list[Document]:
     return texts
 
 
-class KnowledgeDocIndex(BaseModule, ABC):
+class KnowledgeDocIndex(BaseModule):
     collections: list[str]
 
-    def __init__(self, system: System):
-        super().__init__(system)
+    def __init__(self):
+        super().__init__()
         self.system = system
 
     @abstractmethod

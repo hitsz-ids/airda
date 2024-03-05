@@ -10,14 +10,7 @@ from dotenv import load_dotenv
 from overrides import EnforceOverrides
 from pydantic.v1 import BaseSettings
 
-setting_class_keys: dict[str, str] = {
-    "sql_agent.server.api.API": "api_impl",
-    "sql_agent.db.DB": "db_impl",
-    # "sql_agent.model.llm.LLM": "llm_impl",
-    # "sql_agent.vector_store.VectorStore": "vector_store_impl",
-    "sql_agent.rag.knowledge.KnowledgeDocIndex": "doc_index_impl",
-    # "sql_agent.context_store.ContextStore": "context_store_impl",
-}
+from sql_agent.utils.common import Singleton
 
 
 class LogLevel(Enum):
@@ -28,7 +21,27 @@ class LogLevel(Enum):
     DEBUG = "debug"
 
 
-class EnvSettings(BaseSettings):
+T = TypeVar("T", bound="Component")
+M = TypeVar("M")
+
+
+class BaseModule(ABC):
+    _loaded: bool
+
+    def __init__(self):
+        self._loaded = False
+
+    def stop(self) -> None:
+        """Idempotently stop this component's execution and free all associated
+        resources."""
+        self._loaded = False
+
+    def start(self) -> None:
+        """Idempotently start this component's execution"""
+        self._loaded = True
+
+
+class EnvSettings(metaclass=Singleton):
     load_dotenv()
     api_impl: str = os.getenv("API_IMPL", "sql_agent.server.fastapi")
     db_impl: str = os.getenv("DB", "sql_agent.db.mongo.MongoDB")
@@ -70,57 +83,14 @@ class EnvSettings(BaseSettings):
         return getattr(self, key, "")
 
 
-T = TypeVar("T", bound="Component")
-
-
-class BaseModule(ABC, EnforceOverrides):
-    _loaded: bool
-
-    def __init__(self, system: "System"):
-        self._loaded = False
-
-    def stop(self) -> None:
-        """Idempotently stop this component's execution and free all associated
-        resources."""
-        self._loaded = False
-
-    def start(self) -> None:
-        """Idempotently start this component's execution"""
-        self._loaded = True
-
-
-class System(BaseModule):
-    env_settings: EnvSettings
-    _instances: dict[Type[BaseModule], BaseModule]
-
-    def __init__(self, settings: EnvSettings):
-        self.settings = settings
-        self._instances = {}
-        super().__init__(self)
-
-    def get_instance(self, class_type: Type[T]) -> T:
-        """Return an instance of the component type specified. If the system is running,
-        the component will be started as well."""
-
-        if inspect.isabstract(class_type):
-            class_full_name = get_class_full_name(class_type)
-            if class_full_name not in setting_class_keys:
-                raise ValueError(f"Cannot instantiate abstract type: {class_type}")
-            key = setting_class_keys[class_full_name]
-            import_path = self.settings.get(key)
-            class_type = get_class_type(import_path)
-
-        if class_type not in self._instances:
-            impl = class_type(self)
-            self._instances[class_type] = impl
-            if self._loaded:
-                impl.start()
-
-        inst = self._instances[class_type]
-        return cast(T, inst)
-
-
-M = TypeVar("M")
+setting_module_keys: dict[str, str] = {
+    "sql_agent.server.api.API": "api_impl",
+    "sql_agent.db.DB": "db_impl",
+    # "sql_agent.model.llm.LLM": "llm_impl",
+    # "sql_agent.vector_store.VectorStore": "vector_store_impl",
+    "sql_agent.rag.knowledge.KnowledgeDocIndex": "doc_index_impl",
+    # "sql_agent.context_store.ContextStore": "context_store_impl",
+}
 
 
 def get_class_type(import_path: str) -> Type[M]:
@@ -131,11 +101,40 @@ def get_class_type(import_path: str) -> Type[M]:
     return cast(Type[M], cls)
 
 
-def get_class_full_name(cls: Type[object]) -> str:
+def get_module_full_name(cls: Type[object]) -> str:
     """Given a class, return its fully qualified name"""
     return f"{cls.__module__}.{cls.__name__}"
 
 
 env_settings = EnvSettings()
+
+
+class System(metaclass=Singleton):
+    _cache_modules = {}
+
+    def __init__(self):
+        super().__init__()
+        self._env_settings = env_settings
+
+    def get_module(self, module_type: Type[T]) -> T:
+        """Return an instance of the component type specified. If the system is running,
+        the component will be started as well."""
+
+        if inspect.isabstract(module_type):
+            module_full_name = get_module_full_name(module_type)
+            if module_full_name not in setting_module_keys:
+                raise ValueError(f"module: {module_type}, not in setting_module_keys")
+            key = setting_module_keys[module_full_name]
+            import_path = self._env_settings.get(key)
+            module_type = get_class_type(import_path)
+
+        if module_type not in self._cache_modules:
+            module_inst = module_type()
+            self._cache_modules[module_type] = module_inst
+            module_inst.start()
+
+        return cast(T, self._cache_modules[module_type])
+
+
 works = os.getenv("MAX_WORKERS", "4")
 process_pool = concurrent.futures.ProcessPoolExecutor(max_workers=int(works))
