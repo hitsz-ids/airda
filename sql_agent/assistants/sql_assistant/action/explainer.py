@@ -1,4 +1,12 @@
+import json
+from typing import AsyncGenerator
+
+from overrides import overrides
+
+from sql_agent.framework.assistant.action import ActionResultScope, ActionResult
 from sql_agent.framework.assistant.action.llm_action import LlmAction
+from sql_agent.llm.openai import OpenAILLM
+from sql_agent.protocol import ChatCompletionRequest
 
 SQL_ASSISTANT = """
 你是一个世界级SQL专家
@@ -22,16 +30,35 @@ SQL_EXPLAIN_QUESTION = """
 
 
 class Explainer(LlmAction):
-    prompt = """请帮哦我解释生成的结果"""
+
+    def __init__(self, request: ChatCompletionRequest, action_results: dict[str, dict]):
+        super().__init__(request, action_results)
+        self.llm_api = OpenAILLM()
 
     def init_name(self):
         return "Explainer"
 
-    def execute(self):
-        self._result = "Explainer"
+    @overrides
+    async def execute(self) -> AsyncGenerator[str, None]:
+        message = self.make_message()
+        async for chunk in self.llm_api.chat_completion_stream(messages=[message]):
+            json_line = chunk[6:]
+            if json_line.strip() == "[DONE]":
+                yield "[DONE]"
+            else:
+                data = json.loads(json_line)
+                token = data["choices"][0]["delta"].get("content", "")
+                yield token
 
-    def init_prompt(self, param: dict):
-        (table_schema, knowledge, question, sql) = param
+    def init_prompt(self):
+        question = self._request.messages[0].content
+        generator_result = self._actions_results.get("SQLGenerator")
+        searcher_result = self._actions_results.get("Searcher")
+
+        sql = generator_result.get("sql")
+
+        table_schema = searcher_result.get("table_schema")
+        knowledge = searcher_result.get("knowledge")
         prompt = SQL_ASSISTANT
         if table_schema:
             prompt += TABLE_SCHEMA_PROMPT.format(schema=table_schema)

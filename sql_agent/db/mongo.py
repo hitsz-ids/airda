@@ -16,9 +16,19 @@ class MongoStorage(Storage):
 
     def __init__(self):
         super().__init__()
-        db_uri = env_settings.get("db_uri")
-        db_name = env_settings.get("db_name")
-        self._data_store = MongoClient(db_uri)[db_name]
+        self.init_storage()
+
+    def init_storage(self):
+        uri = env_settings.get("mongodb_uri")
+        db_name = env_settings.get("mongodb_db_name")
+        username = env_settings.get("mongodb_username")
+        password = env_settings.get("mongodb_password")
+        if username and password:
+            self._data_store = MongoClient(uri, username=username, password=password)[
+                db_name
+            ]
+        else:
+            self._data_store = MongoClient(uri)[db_name]
 
     @override
     def find_one(self, collection: str, query: dict) -> dict:
@@ -29,7 +39,7 @@ class MongoStorage(Storage):
         return self._data_store[collection].insert_one(obj).inserted_id
 
     def insert_many(
-            self, collection: str, obj: Iterable[Union[_DocumentType, RawBSONDocument]]
+        self, collection: str, obj: Iterable[Union[_DocumentType, RawBSONDocument]]
     ) -> list:
         return self._data_store[collection].insert_many(obj).inserted_ids
 
@@ -38,7 +48,9 @@ class MongoStorage(Storage):
         self._data_store[old_collection_name].rename(new_collection_name)
 
     @override
-    def rename_field(self, collection_name: str, old_field_name: str, new_field_name: str) -> None:
+    def rename_field(
+        self, collection_name: str, old_field_name: str, new_field_name: str
+    ) -> None:
         self._data_store[collection_name].update_many(
             {}, {"$rename": {old_field_name: new_field_name}}
         )
@@ -57,12 +69,12 @@ class MongoStorage(Storage):
 
     @override
     def find(
-            self,
-            collection: str,
-            query: dict,
-            sort: list = None,
-            page: int = 0,
-            limit: int = 0,
+        self,
+        collection: str,
+        query: dict,
+        sort: list = None,
+        page: int = 0,
+        limit: int = 0,
     ) -> list:
         skip_count = (page - 1) * limit
         cursor = self._data_store[collection].find(query)
@@ -76,7 +88,9 @@ class MongoStorage(Storage):
     def find_all(self, collection: str, page: int = 0, limit: int = 0) -> list:
         if page > 0 and limit > 0:
             skip_count = (page - 1) * limit
-            return list(self._data_store[collection].find({}).skip(skip_count).limit(limit))
+            return list(
+                self._data_store[collection].find({}).skip(skip_count).limit(limit)
+            )
         return list(self._data_store[collection].find({}))
 
     @override

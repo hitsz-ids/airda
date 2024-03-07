@@ -60,7 +60,7 @@ class Planner(Assistant):
         }
         """
 
-        plan_result = ["Chat", "SQL"]
+        plan_result = ["SQL"]
         assistants = create_assistants(plan_result, self._request)
         return Task(assistants)
 

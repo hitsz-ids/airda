@@ -14,14 +14,14 @@ from sql_agent.protocol import (
 
 
 async def upload_file_form(
-    file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
+        file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
 ):
     return CompletionKnowledgeLoadRequest(
         file=file, file_id=file_id, file_name=file_name
     )
 
 
-class FastAPIServer(WebFrameworkServer):
+class SQLAgentServer(WebFrameworkServer):
     def __init__(self, host="0.0.0.0", port=8888):
         super().__init__(host, port)
         self.router = None
@@ -57,25 +57,28 @@ class FastAPIServer(WebFrameworkServer):
             methods=["POST"],
             tags=["add datasource"],
         )
+
         self.router.add_api_route(
             "/v1/instruction/sync",
             self.instruction_sync,
             methods=["POST"],
-            tags=["add gold_sql"],
+            tags=["instruction sync"],
         )
+
         self.router.add_api_route(
             "/v1/instruction/status",
             self.instruction_sync_status,
             methods=["GET"],
-            tags=["add gold_sql"],
+            tags=["instruction status"],
         )
 
         self.router.add_api_route(
             "/v1/instruction/stop",
             self.instruction_sync_stop,
             methods=["POST"],
-            tags=["add gold_sql"],
+            tags=["instruction stop"],
         )
+
         self.router.add_api_route(
             "/v1/knowledge/train",
             self.knowledge_train,
@@ -89,19 +92,19 @@ class FastAPIServer(WebFrameworkServer):
         return await self._api.create_completion(request)
 
     async def instruction_sync(
-        self,
-        request: CompletionInstructionSyncRequest,
-        background_tasks: BackgroundTasks,
+            self,
+            request: CompletionInstructionSyncRequest,
+            background_tasks: BackgroundTasks,
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
     async def instruction_sync_status(
-        self, request: CompletionInstructionSyncStatusRequest
+            self, request: CompletionInstructionSyncStatusRequest
     ):
         return await self._api.instruction_sync_status(request)
 
     async def instruction_sync_stop(
-        self, request: CompletionInstructionSyncStopRequest
+            self, request: CompletionInstructionSyncStopRequest
     ):
         return await self._api.instruction_sync_stop(request)
 
@@ -109,8 +112,8 @@ class FastAPIServer(WebFrameworkServer):
         return await self._api.datasource_add(request)
 
     async def knowledge_train(
-        self,
-        background_tasks: BackgroundTasks,
-        request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
+            self,
+            background_tasks: BackgroundTasks,
+            request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
     ):
         await self._api.knowledge_train(request, background_tasks)

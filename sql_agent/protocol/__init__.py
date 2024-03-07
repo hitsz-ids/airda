@@ -15,11 +15,12 @@ class ErrorResponse(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    messages: list[dict[str, str]]
+    messages: list["DeltaMessage"]
     datasource_id: str
     database: str
     knowledge: str
     session_id: str
+    sql_type: str = "mysql"
     file_path: str
 
 
@@ -52,9 +53,12 @@ class CompletionInstructionSyncStopRequest(BaseModel):
     id: str
 
 
+ChatMessage = dict[Literal["role", "content"], str]
+
+
 class DeltaMessage(BaseModel):
-    role: Optional[str] = None
-    content: Optional[str] = None
+    role: str
+    content: str
 
 
 class ChatCompletionResponseStreamChoice(BaseModel):

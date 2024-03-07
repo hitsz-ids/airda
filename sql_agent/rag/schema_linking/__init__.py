@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Tuple
 
 import numpy as np
 
@@ -26,5 +25,5 @@ class SchemaLinking(ABC):
         database: str,
         limit_score: int,
         tok_k: int,
-    ) -> Tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[str]]:
         pass

@@ -10,7 +10,7 @@ from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.rag import schema_linking
 from sql_agent.rag.knowledge import KnowledgeService, process_single_doc
 from sql_agent.rag.knowledge.types import Document
-from sql_agent.setting import System, process_pool
+from sql_agent.setting import System
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class KnowledgeServiceImpl(KnowledgeService):
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
         self.knowledge_repository = KnowledgeStorage(system.get_module(Storage))
-        self.process_pool = process_pool
+        self.process_pool = system.get_process_pool()
 
     @override
     def query_doc(self, query_texts: str, source: list[str], num_results: int):

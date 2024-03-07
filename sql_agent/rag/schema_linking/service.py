@@ -1,16 +1,12 @@
 import heapq
 import logging
 import concurrent.futures
-from typing import Any, Tuple
 
 import numpy as np
 
-import sql_agent
 from sql_agent.rag.schema_linking import SchemaLinking
 from sql_agent.setting import System
-from sql_agent.db import Storage
 from sql_agent.db.repositories.instructions import InstructionRepository
-from sql_agent.llm.embedding_model import EmbeddingModel
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +18,7 @@ class SchemaLinkingImpl(SchemaLinking):
 
     def search(
         self, query: str, datasource_id: str, database: str, limit_score=65, top_k=100
-    ) -> Tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[str]]:
         logger.info("开始查询相似表")
         question_embedding = self._embedding_question(query)
         all_tables, all_scores = self._retrieve_db_embeddings(
@@ -51,13 +47,13 @@ class SchemaLinkingImpl(SchemaLinking):
             logger.info(f"查询第{page}页数据,返回{len(db_embedding)}条数据")
 
             batch_tables = [item.table_name for item in db_embedding]
-            task = sql_agent.config.process_pool.submit(
+            task = system.get_process_pool().submit(
                 do_calc_similarity, (batch_tables, question_embedding, db_embedding)
             )
             if len(db_embedding) == 0:
                 break
             batch_tables = [item.table_name for item in db_embedding]
-            task = sql_agent.config.process_pool.submit(
+            task = system.get_process_pool().submit(
                 do_calc_similarity,
                 (batch_tables, question_embedding, db_embedding),
             )

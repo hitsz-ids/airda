@@ -4,7 +4,7 @@ from sql_agent.framework.assistant.base import Assistant
 
 
 class ChatAssistant(Assistant):
-    _prompt: "我是一个什么xxx"
+    _prompt: ""
 
     def before(self, action: Action):
         pass
@@ -14,9 +14,6 @@ class ChatAssistant(Assistant):
 
     def init_actions(self) -> list[type[Action]]:
         return [Searcher]
-
-    def prepare(self, action: Action):
-        pass
 
     def complete(self, action: Action) -> bool:
         return False

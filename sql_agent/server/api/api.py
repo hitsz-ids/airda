@@ -1,13 +1,14 @@
 import json
 import logging
 import os
-from typing import Any
+from typing import AsyncGenerator
+
+import pandas as pd
 
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from overrides import override
-from torch import Generator
 
 from sql_agent.db import Storage
 from sql_agent.db.repositories.datasource import DatasourceRepository
@@ -47,26 +48,10 @@ logger = logging.getLogger(__name__)
 system = System()
 
 
-def create_error_response(code: int, message: str) -> JSONResponse:
-    return JSONResponse(
-        ErrorResponse(message=message, code=code).dict(), status_code=400
-    )
-
-
-def paginate_array(array, page_size):
-    result = []
-    for i in range(0, len(array), page_size):
-        result.append(array[i : i + page_size])
-    return result
-
-    # 示例用法
-
-
 class APIImpl(API):
     def __init__(self):
         super().__init__()
         self.system = system
-        self.storage = self.system.get_module(Storage)
         self.csv_file_suffix = "_knowledge.csv"
         self.doc_collection = "doc_collection"
         self.storage = system.get_module(Storage)
@@ -75,27 +60,18 @@ class APIImpl(API):
 
     @override
     async def create_completion(self, request: ChatCompletionRequest):
-        gen = self.content_stream(request)
-        return StreamingResponse(gen, media_type="text/event-stream")
+        async def stream_generator() -> AsyncGenerator[str, None]:
+            planner = Planner(request)
+            tasks = planner.plan()
+            async for item in tasks.execute():
+                print(item)
+                if item != "[DONE]":
+                    yield f"data: {make_stream_data(content=item)}\n\n"
+                else:
+                    yield f"data: [DONE]\n\n"
+                    return
 
-    async def content_stream(self, request: ChatCompletionRequest):
-        question = request.messages
-        """获得规划后进行执行.
-        方案1.按照langchain agent式进行调用.
-        方案2.按照metagpt的方式,让assistant自己进行处理与调用
-        """
-        # 获取assistants
-        planner = Planner(request)
-        tasks = planner.plan()
-        gen = tasks.execute()
-        i = next(gen)
-        try:
-            while True:
-                result = gen.send(i)
-                i = result
-                yield result
-        except StopIteration as e:
-            print(e.value)
+        return StreamingResponse(stream_generator(), media_type="text/event-stream")
 
     @override
     async def datasource_add(self, request: DatasourceAddRequest):
@@ -116,7 +92,7 @@ class APIImpl(API):
 
     @override
     async def knowledge_train(
-        self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
+            self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
     ):
         # 保存文件到指定路径
         file_contents = await request.file.read()
@@ -141,9 +117,9 @@ class APIImpl(API):
 
     @override
     async def instruction_sync(
-        self,
-        request: CompletionInstructionSyncRequest,
-        background_tasks: BackgroundTasks,
+            self,
+            request: CompletionInstructionSyncRequest,
+            background_tasks: BackgroundTasks,
     ):
         instructions = request.instructions
         if instructions:
@@ -154,16 +130,13 @@ class APIImpl(API):
             return BaseResponse(msg="请传入有效表结构", code=10001, data=None)
         datasource_id = request.datasource_id
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one(
-            {"datasource_id": datasource_id}
-        )
         instruction_repository = InstructionRepository(self.storage)
         sync_embedding_record = embedding_repository.find_one(
             {"datasource_id": datasource_id}
         )
         if (
-            sync_embedding_record is None
-            or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
+                sync_embedding_record is None
+                or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
         ):
             instruction_repository.delete_by({"datasource_id": datasource_id})
             if sync_embedding_record is None:
@@ -204,7 +177,7 @@ class APIImpl(API):
 
     @override
     async def instruction_sync_status(
-        self, request: CompletionInstructionSyncStatusRequest
+            self, request: CompletionInstructionSyncStatusRequest
     ):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
         sync_embedding_record = embedding_repository.find_one({"_id": request.id})
@@ -217,13 +190,13 @@ class APIImpl(API):
 
     @override
     async def instruction_sync_stop(
-        self, request: CompletionInstructionSyncStatusRequest
+            self, request: CompletionInstructionSyncStatusRequest
     ):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
         sync_embedding_record = embedding_repository.find_one({"_id": request.id})
         if (
-            sync_embedding_record
-            and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
+                sync_embedding_record
+                and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
         ):
             sync_embedding_record.status = DBEmbeddingStatus.STOP.value
             embedding_repository.update(sync_embedding_record)
@@ -304,13 +277,45 @@ class APIImpl(API):
         # 1.增加同步状态,同步完后修改为成功
         os.remove(file_path)
 
+    def generator_knowledge_csv(self, file_path: str) -> str:
+        df = pd.read_csv(file_path)
+        new_df = pd.DataFrame()
+        new_df["knowledge"] = (
+                df.iloc[:, 0].astype(str)
+                + "包含"
+                + df.iloc[:, 1].astype(str)
+                + ","
+                + df.iloc[:, 1].astype(str)
+                + "包含有"
+                + df.iloc[:, 2].astype(str)
+                + ","
+                + df.iloc[:, 2].astype(str)
+                + "的计算方法是"
+                + df.iloc[:, 3].astype(str)
+        )
+        knowledge_csv = file_path.replace(".csv", self.csv_file_suffix)
+        new_df.to_csv(knowledge_csv, index=False)
+        return knowledge_csv
+
+    def save_instructions(self, instructions: list[Instruction]):
+        instruction_repository = InstructionRepository(self.storage)
+        for instruction in instructions:
+            instruction_repository.insert(instruction)
+
+
+def paginate_array(array, page_size):
+    result = []
+    for i in range(0, len(array), page_size):
+        result.append(array[i: i + page_size])
+    return result
+
 
 def make_stream_data(
-    content,
-    rep_type: str = "stream",
-    model: str = "gpt-4-1106-preview",
-    finish_reason: str = "",
-    session_id: str = "",
+        content: str | dict | list,
+        rep_type: str = "stream",
+        model: str = "gpt-4-1106-preview",
+        finish_reason: str = "",
+        session_id: str = "",
 ):
     push_json = {"type": rep_type, "data": content}
     choice_data = ChatCompletionResponseStreamChoice(
@@ -324,4 +329,10 @@ def make_stream_data(
     chunk = ChatCompletionStreamResponse(
         id=session_id, choices=[choice_data], model=model
     )
-    return chunk.model_dump_json(exclude_unset=True, ensure_ascii=False)
+    return chunk.model_dump_json(exclude_unset=True)
+
+
+def create_error_response(code: int, message: str) -> JSONResponse:
+    return JSONResponse(
+        ErrorResponse(message=message, code=code).dict(), status_code=400
+    )

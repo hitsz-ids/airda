@@ -1,12 +1,12 @@
 import logging
-
 from sql_agent.db import Storage
 from sql_agent.db.repositories.instructions import InstructionRepository
-from sql_agent.db.repositories.types import ColumnDetail, TableDescription
+from sql_agent.db.repositories.types import TableDescription
+from sql_agent.framework.assistant.action import ActionResultScope, ActionResult
 from sql_agent.framework.assistant.action.base import Action
 from sql_agent.protocol import ChatCompletionRequest
 from sql_agent.rag.knowledge.service import KnowledgeServiceImpl
-from sql_agent.rag.schema_linking import SchemaLinking
+from sql_agent.rag.schema_linking.service import SchemaLinkingImpl
 from sql_agent.setting import System, env_settings
 
 logger = logging.getLogger(__name__)
@@ -15,12 +15,11 @@ system = System()
 
 
 class Searcher(Action):
-
-    def __int__(self, request: ChatCompletionRequest):
-        super().__init__(request)
+    def __init__(self, request: ChatCompletionRequest, action_results: dict[str, dict]):
+        super().__init__(request, action_results)
         self.storage = system.get_module(Storage)
         self.doc_index = KnowledgeServiceImpl()
-        self.schema_linking = SchemaLinking()
+        self.schema_linking = SchemaLinkingImpl()
         self.instruction_repository = InstructionRepository(self.storage)
 
     def init_name(self):
@@ -30,13 +29,18 @@ class Searcher(Action):
         """
         调用RAG，得到搜索内容
         """
-        knowledge = self._search_knowledge()
+        # knowledge = self._search_knowledge()
+        knowledge = ""
         tables_description = self._search_tables()
         # few_shot = self._search_few_show()
-        self._result = {
+
+        result = {
             "knowledge": knowledge,
             "tables_description": tables_description,
+            "tables_schema": extract_table_schema(tables_description),
+            "few_shot_example": "",
         }
+        self.set_result(result, ActionResultScope.internal)
 
     def _search_knowledge(self):
         file_path = self._request.file_path
@@ -63,7 +67,7 @@ class Searcher(Action):
         return knowledge
 
     def _search_tables(self):
-        question = self._request.messages
+        question = self._request.messages[0].content
         datasource_id = self._request.datasource_id
         database = self._request.database
         limit_score_result, top_k_result = self.schema_linking.search(
@@ -77,7 +81,7 @@ class Searcher(Action):
         return self._get_table_instruction(table_names, datasource_id, database)
 
     def _get_table_instruction(
-        self, table_names: list[str], datasource_id: str, database: str
+            self, table_names: list[str], datasource_id: str, database: str
     ) -> list[TableDescription]:
         results = []
         for table in table_names:
@@ -115,3 +119,7 @@ def format_few_show(few_shot_examples: list):
             f"Question: {example['nl_question']} -> SQL: {example['sql_query']} \n"
         )
     return few_shot + "\n"
+
+
+def extract_table_schema(tables_description: list[TableDescription]) -> str:
+    return "\n".join(item.table_schema for item in tables_description) + "\n"

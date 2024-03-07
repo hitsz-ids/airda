@@ -1,18 +1,18 @@
 from abc import abstractmethod
-from typing import Any, Generator
-
-from pydantic import BaseModel
-
-from sql_agent.framework.assistant.action import ActionStatus
-from sql_agent.framework.assistant.action.base import Action
+from typing import AsyncGenerator
+from sql_agent.framework.assistant.action import ActionStatus, ActionResultScope
+from sql_agent.framework.assistant.action.base import Action, AsyncAction
 from sql_agent.protocol import ChatCompletionRequest
+from sql_agent.setting import System
+
+system = System()
 
 
 class Assistant:
     _actions: list[type[Action]]
     _currentActionIndex: int
     _request: ChatCompletionRequest
-    _actions_results: dict[str, dict]
+    _actions_results: dict[str, dict] = {}
 
     def __init__(self, request):
         self._actions = self.init_actions()
@@ -22,18 +22,24 @@ class Assistant:
     def init_actions(self) -> list[type[Action]]:
         pass
 
-    def run(self) -> Generator:
+    async def run(self) -> AsyncGenerator[str, None]:
         size = len(self._actions)
         for i in range(size):
-            action = self._actions[i](self._request)
+            action = self._actions[i](self._request, self._actions_results)
             self.prepare(action)
             self._currentActionIndex = i
-            action.execute()
+            if isinstance(action, AsyncAction):
+                async for item in action.execute():
+                    if item:
+                        yield item
+            else:
+                action.execute()
+                if action.get_result().scope == ActionResultScope.user:
+                    yield action.get_result().result
+
             name = action.get_name()
             result = action.get_result()
-            output = {name: result}
-            self._actions_results[name] = result
-            yield output
+            self._actions_results[name] = result.result
             intercepted = self.complete(action)
             if intercepted:
                 break
