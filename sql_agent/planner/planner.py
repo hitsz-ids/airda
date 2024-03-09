@@ -10,9 +10,7 @@ from sql_agent.protocol import ChatCompletionRequest
 assistant_map: dict[str, Type[Assistant]] = {"Chat": ChatAssistant, "SQL": SqlAssistant}
 
 
-def create_assistants(
-    plan_result: list[str], request: ChatCompletionRequest
-) -> list[Assistant]:
+def create_assistants(plan_result: list[str], request: ChatCompletionRequest) -> list[Assistant]:
     assistants: list[Assistant] = []
     for item in plan_result:
         try:
@@ -26,7 +24,7 @@ def create_assistants(
 _prompt = """
 你是一个AI助理总管，你拥有两个助理来辅助你的工作，他们有各自的能力和特点。你的任务是根据用户提出问题推荐或选择其中的一个或者多个来解决用户的问题。
 
-两个助理的情况分别是： 
+两个助理的情况分别是：
 SqlAssistant是一个专业的SQL助理，能力如下：
 1.可以在明确数据表的前提下，能够解构类似于银行十几条业务规则等复杂任务，通过多轮对话式、引导确认式问答自动生成SQL语句。
 2.可以对SQL给出易于人类理解的解释。

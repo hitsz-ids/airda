@@ -4,7 +4,6 @@ from sql_agent.framework.assistant.action.llm_action import LlmAction
 
 
 class Planning(LlmAction):
-
     def init_prompt(self) -> str:
         return ""
 

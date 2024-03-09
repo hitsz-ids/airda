@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import shortuuid
 from fastapi import File, UploadFile
@@ -28,6 +28,14 @@ class CompletionKnowledgeLoadRequest(BaseModel):
     file_id: str
     file_name: str
     file: UploadFile = File(...)
+
+
+class CompletionKnowledgeStatusRequest(BaseModel):
+    id: str
+
+
+class CompletionKnowledgeStopRequest(BaseModel):
+    id: str
 
 
 class DatasourceAddRequest(BaseModel):

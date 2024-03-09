@@ -1,8 +1,9 @@
 import logging
+
 from sql_agent.db import Storage
 from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.db.repositories.types import TableDescription
-from sql_agent.framework.assistant.action import ActionResultScope, ActionResult
+from sql_agent.framework.assistant.action import ActionResult, ActionResultScope
 from sql_agent.framework.assistant.action.base import Action
 from sql_agent.protocol import ChatCompletionRequest
 from sql_agent.rag.knowledge.service import KnowledgeServiceImpl
@@ -81,7 +82,7 @@ class Searcher(Action):
         return self._get_table_instruction(table_names, datasource_id, database)
 
     def _get_table_instruction(
-            self, table_names: list[str], datasource_id: str, database: str
+        self, table_names: list[str], datasource_id: str, database: str
     ) -> list[TableDescription]:
         results = []
         for table in table_names:
@@ -115,9 +116,7 @@ class Searcher(Action):
 def format_few_show(few_shot_examples: list):
     few_shot = "\n"
     for example in few_shot_examples:
-        few_shot += (
-            f"Question: {example['nl_question']} -> SQL: {example['sql_query']} \n"
-        )
+        few_shot += f"Question: {example['nl_question']} -> SQL: {example['sql_query']} \n"
     return few_shot + "\n"
 
 

@@ -1,6 +1,11 @@
-from abc import abstractmethod, ABC
+from abc import ABC, abstractmethod
 from typing import AsyncGenerator
-from sql_agent.framework.assistant.action import ActionStatus, ActionResult, ActionResultScope
+
+from sql_agent.framework.assistant.action import (
+    ActionResult,
+    ActionResultScope,
+    ActionStatus,
+)
 from sql_agent.protocol import ChatCompletionRequest
 
 

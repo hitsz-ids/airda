@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import logging
+from abc import ABC, abstractmethod
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import (
@@ -16,7 +16,6 @@ from langchain_community.document_loaders import (
     UnstructuredWordDocumentLoader,
 )
 
-from sql_agent.setting import System
 from sql_agent.rag.knowledge.types import Document
 from sql_agent.setting import System
 
@@ -92,9 +91,7 @@ def process_single_doc(file_path: str) -> list[Document]:
     )
     logger.info(f"开始切分文件:{file_path}")
     texts = text_splitter.split_documents(docs)
-    logger.info(
-        f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)"
-    )
+    logger.info(f"Split into {len(texts)} chunks of text (max. {chunk_size} tokens each)")
     return texts
 
 
@@ -109,7 +106,7 @@ class KnowledgeService(ABC):
         pass
 
     @abstractmethod
-    def upload_doc(self, file_path: str):
+    def upload_doc(self, file_path: str, record_id: str):
         pass
 
     @abstractmethod

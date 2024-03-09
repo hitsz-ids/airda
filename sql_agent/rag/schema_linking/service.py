@@ -1,12 +1,12 @@
+import concurrent.futures
 import heapq
 import logging
-import concurrent.futures
 
 import numpy as np
 
+from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.rag.schema_linking import SchemaLinking
 from sql_agent.setting import System
-from sql_agent.db.repositories.instructions import InstructionRepository
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,6 @@ system = System()
 
 
 class SchemaLinkingImpl(SchemaLinking):
-
     def search(
         self, query: str, datasource_id: str, database: str, limit_score=65, top_k=100
     ) -> tuple[list[str], list[str]]:
@@ -27,9 +26,7 @@ class SchemaLinkingImpl(SchemaLinking):
         sorted_result = self._rank_tables(all_tables, all_scores, top_k)
         return self._filter_results(sorted_result, all_scores, limit_score)
 
-    def _retrieve_db_embeddings(
-        self, question_embedding, datasource_id: str, database: str
-    ):
+    def _retrieve_db_embeddings(self, question_embedding, datasource_id: str, database: str):
         page = 1
         limit = 5
         all_tables = []
@@ -70,9 +67,7 @@ class SchemaLinkingImpl(SchemaLinking):
         return all_tables, all_scores
 
     def _rank_tables(self, all_tables, all_scores, top_k):
-        top_k_idxs = heapq.nlargest(
-            top_k, range(len(all_scores)), key=all_scores.__getitem__
-        )
+        top_k_idxs = heapq.nlargest(top_k, range(len(all_scores)), key=all_scores.__getitem__)
         sorted_result = [all_tables[i] for i in top_k_idxs]
         return sorted_result
 
@@ -80,9 +75,7 @@ class SchemaLinkingImpl(SchemaLinking):
         return self.embedding_model.embed_query(question)[0]
 
     def _filter_results(self, sorted_result, all_scores, limit_score):
-        limit_score_idxs = [
-            idx for idx, sim in enumerate(all_scores) if sim > limit_score
-        ]
+        limit_score_idxs = [idx for idx, sim in enumerate(all_scores) if sim > limit_score]
         limit_score_len = len(limit_score_idxs)
         max_length = 10
         if limit_score_len > max_length:
@@ -103,9 +96,7 @@ def calc_score(query_embedding, search_embedding):
     return np.average(max_score, axis=1)
 
 
-def calc_similarity(
-    query_embedding, table_embedding, columns_embedding, table_weight=30
-):
+def calc_similarity(query_embedding, table_embedding, columns_embedding, table_weight=30):
     if not table_embedding or not columns_embedding:
         return [0]
     table_embedding = [item[0] for item in table_embedding]
@@ -123,8 +114,6 @@ def do_calc_similarity(args):
     batch_tables, question_embedding, db_embedding = args
     table_embedding = [item.table_comment_embedding for item in db_embedding]
     columns_embedding = [item.column_embedding for item in db_embedding]
-    batch_score = calc_similarity(
-        question_embedding, table_embedding, columns_embedding
-    )
+    batch_score = calc_similarity(question_embedding, table_embedding, columns_embedding)
     logger.info("批处理相似性分值完成")
     return batch_tables, batch_score
