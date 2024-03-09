@@ -49,7 +49,7 @@ class DatasourceAddRequest(BaseModel):
 
 
 class CompletionInstructionSyncRequest(BaseModel):
-    instructions: str | list[Instruction]
+    instructions: list[Instruction]
     datasource_id: str
 
 

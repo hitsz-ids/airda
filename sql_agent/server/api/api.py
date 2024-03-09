@@ -170,10 +170,11 @@ class APIImpl(API):
             else:
                 sync_embedding_record.status = DBEmbeddingStatus.EMBEDDING.value
                 embedding_repository.update(sync_embedding_record)
-            self.save_instructions(instructions)
+            self.save_instructions(instructions, datasource_id)
         else:
             return BaseResponse(msg="成功", code=0, data={"id": sync_embedding_record.id})
         success = True
+        instruction_repository.delete_embedding_by({"datasource_id": datasource_id})
         for page_data in page_array:
             save_result = self.process_page(page_data, sync_embedding_record.id)
             if isinstance(save_result, str) and save_result.startswith("Error"):
@@ -199,7 +200,7 @@ class APIImpl(API):
     @override
     async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        sync_embedding_record = embedding_repository.find_one({"_id": ObjectId(request.id)})
         if sync_embedding_record is None:
             return BaseResponse(msg="查询失败,未查到同步记录", code=10002, data={})
         else:
@@ -208,7 +209,7 @@ class APIImpl(API):
     @override
     async def instruction_sync_stop(self, request: CompletionInstructionSyncStatusRequest):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        sync_embedding_record = embedding_repository.find_one({"_id": ObjectId(request.id)})
         if (
             sync_embedding_record
             and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
@@ -236,11 +237,11 @@ class APIImpl(API):
                 for db_schema in schema_list:
                     table_schema = db_schema.instruction
                     if table_schema:
-                        des = table_schema["description"]
-                        columns = table_schema["columns"]
+                        des = table_schema.description
+                        columns = table_schema.columns
                         column_str = ""
                         for column in columns:
-                            column_str += f" {column['name']} {column['description']}"
+                            column_str += f" {column.name} {column.description}"
                         table_fields.append(column_str)
                         table_comments.append(des)
                 comment_embedding = self.embedding_model.embed_query(table_comments).tolist()
@@ -249,14 +250,14 @@ class APIImpl(API):
                     db_schema = schema_list[idx]
                     table_schema = db_schema.instruction
                     if table_schema:
-                        table_name = table_schema["table_name"]
+                        table_name = table_schema.name
                         table_comment_embedding = comment_embedding[idx]
                         table_column_embedding = column_embedding[idx]
                         db_embedding_instruction = EmbeddingInstruction(
                             table_name=table_name,
                             datasource_id=db_schema.datasource_id,
                             database=db_schema.database,
-                            table_comment=table_schema["description"],
+                            table_comment=table_schema.description,
                             table_comment_embedding=table_comment_embedding,
                             column_embedding=table_column_embedding,
                         )
@@ -305,8 +306,9 @@ class APIImpl(API):
         new_df.to_csv(knowledge_csv, index=False)
         return knowledge_csv
 
-    def save_instructions(self, instructions: list[Instruction]):
+    def save_instructions(self, instructions: list[Instruction], datasource_id: str):
         instruction_repository = InstructionRepository(self.storage)
+        instruction_repository.delete_by({"datasource_id": datasource_id})
         for instruction in instructions:
             instruction_repository.insert(instruction)
 

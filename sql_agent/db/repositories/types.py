@@ -24,14 +24,6 @@ class Knowledge(BaseModel):
     content_embedding: Any
 
 
-class Instruction(BaseModel):
-    id: str | None = None
-    instruction: dict
-    datasource_id: str
-    database: str
-    table_name: str
-
-
 class EmbeddingInstruction(BaseModel):
     id: str | None = None
     datasource_id: str
@@ -109,3 +101,11 @@ class TableDescription(BaseModel):
         if not value:
             return None
         return value.replace(tzinfo=timezone.utc)  # Set the timezone to UTC
+
+
+class Instruction(BaseModel):
+    id: str | None = None
+    instruction: TableDescription
+    datasource_id: str
+    database: str
+    table_name: str
