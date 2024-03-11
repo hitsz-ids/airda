@@ -55,7 +55,7 @@ class Searcher(Action):
 
         query_message = ""
         for obj in reversed(self._request.messages):
-            if obj.get("role") == "user":
+            if obj.role == "user":
                 query_message = obj.content
                 break
         docs = self.doc_index.query_doc(
