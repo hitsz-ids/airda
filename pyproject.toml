@@ -6,7 +6,7 @@ authors = ["hitsz-ids"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 pandas="2.1.1"
 fastapi="0.99.1"
 langchain="0.0.340"
