@@ -22,6 +22,8 @@ class ChatCompletionRequest(BaseModel):
     session_id: str
     sql_type: str = "mysql"
     file_path: str
+    file_name: str
+    file_id: str
 
 
 class CompletionKnowledgeLoadRequest(BaseModel):

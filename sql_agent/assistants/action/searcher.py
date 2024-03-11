@@ -3,7 +3,7 @@ import logging
 from sql_agent.db import Storage
 from sql_agent.db.repositories.instructions import InstructionRepository
 from sql_agent.db.repositories.types import TableDescription
-from sql_agent.framework.assistant.action import ActionResult, ActionResultScope
+from sql_agent.framework.assistant.action import ActionResultScope
 from sql_agent.framework.assistant.action.base import Action
 from sql_agent.protocol import ChatCompletionRequest
 from sql_agent.rag.knowledge.service import KnowledgeServiceImpl
@@ -44,17 +44,22 @@ class Searcher(Action):
         self.set_result(result, ActionResultScope.internal)
 
     def _search_knowledge(self):
-        file_path = self._request.file_path
+        file_id = self._request.file_id
+        file_name = self._request.file_name
         logger.info("开始查询知识库")
         source = []
-        if file_path:
+        if file_id and file_name:
             source = [
-                f"{env_settings.knowledge_path}/{obj['file_id']}/{obj['file_name'].replace('.csv', '_knowledge.csv')}"
-                for obj in file_path
+                f"{env_settings.knowledge_path}/{file_id}/{file_name.replace('.csv', '_knowledge.csv')}"
             ]
 
+        query_message = ""
+        for obj in reversed(self._request.messages):
+            if obj.get("role") == "user":
+                query_message = obj.content
+                break
         docs = self.doc_index.query_doc(
-            query_texts=self._request.messages,
+            query_texts=query_message,
             source=source,
             num_results=2,
         )
