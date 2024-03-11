@@ -13,11 +13,12 @@ class Assistant:
     _actions: list[type[Action]]
     _currentActionIndex: int
     _request: ChatCompletionRequest
-    _actions_results: dict[str, dict] = {}
+    _actions_results: dict[str, dict]
 
     def __init__(self, request):
         self._actions = self.init_actions()
         self._request = request
+        self._actions_results = {}
 
     @abstractmethod
     def init_actions(self) -> list[type[Action]]:
