@@ -11,7 +11,6 @@ class KnowledgeSyncRepository:
 
     def insert(self, embedding_record: KnowledgeEmbeddingRecord) -> KnowledgeEmbeddingRecord:
         embedding_record_dict = embedding_record.dict(exclude={"id"})
-        embedding_record_dict["datasource_id"] = embedding_record.file_id
         embedding_record.id = str(
             self.storage.insert_one(SYNC_EMBEDDING_COLLECTION, embedding_record_dict)
         )
@@ -22,13 +21,17 @@ class KnowledgeSyncRepository:
         if not row:
             return None
         row["id"] = str(row["_id"])
-        row["datasource_id"] = str(row["datasource_id"])
+        return KnowledgeEmbeddingRecord(**row)
+
+    def find_by_id(self, id: str) -> KnowledgeEmbeddingRecord | None:
+        row = self.storage.find_one(SYNC_EMBEDDING_COLLECTION, {"_id": ObjectId(id)})
+        if not row:
+            return None
+        row["id"] = str(row["_id"])
         return KnowledgeEmbeddingRecord(**row)
 
     def update(self, embedding_record: KnowledgeEmbeddingRecord) -> KnowledgeEmbeddingRecord:
         embedding_record_dict = embedding_record.dict(exclude={"id"})
-        embedding_record_dict["file_id"] = embedding_record.file_id
-
         self.storage.update_or_create(
             SYNC_EMBEDDING_COLLECTION,
             {"_id": ObjectId(embedding_record.id)},

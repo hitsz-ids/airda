@@ -5,6 +5,7 @@ from typing import AsyncGenerator
 
 import httpx
 from overrides import override
+
 from sql_agent.llm import LLM
 from sql_agent.protocol import ChatMessage
 
@@ -12,17 +13,16 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAILLM(LLM):
-
     def __init__(self):
         super().__init__()
         self._api_key = self.system.env_settings.openai_api_key
 
     @override
     async def chat_completion(
-            self,
-            messages: list[ChatMessage],
-            model_name="gpt-4-1106-preview",
-            session_id=f"ChatGPT-{uuid.uuid4()}",
+        self,
+        messages: list[ChatMessage],
+        model_name="gpt-4-1106-preview",
+        session_id=f"ChatGPT-{uuid.uuid4()}",
     ) -> AsyncGenerator[str, None]:
         logger.info(f"开始请求OpenAI: {datetime.datetime.now()}")
         logger.info(f"prompt: {messages[-1].get('content')}")
@@ -55,12 +55,11 @@ class OpenAILLM(LLM):
 
     @override
     async def chat_completion_stream(
-            self,
-            messages: list[ChatMessage],
-            model_name="gpt-4-1106-preview",
-            session_id=f"ChatGPT-{uuid.uuid4()}"
+        self,
+        messages: list[ChatMessage],
+        model_name="gpt-4-1106-preview",
+        session_id=f"ChatGPT-{uuid.uuid4()}",
     ) -> AsyncGenerator[str, None]:
-
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self._api_key,
@@ -74,11 +73,11 @@ class OpenAILLM(LLM):
         }
         async with httpx.AsyncClient() as client:
             async with client.stream(
-                    "POST",
-                    "https://api.openai.com/v1/chat/completions",
-                    headers=headers,
-                    json=params,
-                    timeout=60,
+                "POST",
+                "https://api.openai.com/v1/chat/completions",
+                headers=headers,
+                json=params,
+                timeout=60,
             ) as response:
                 async for line in response.aiter_lines():
                     if line.strip() == "":

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from sql_agent.setting import System, env_settings
 from sql_agent.server.api import API
+from sql_agent.setting import System, env_settings
 
 system = System()
 

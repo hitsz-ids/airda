@@ -4,7 +4,6 @@ from sql_agent.setting import BaseModule
 
 
 class Storage(BaseModule):
-
     @abstractmethod
     def insert_one(self, collection: str, obj: dict) -> int:
         pass
@@ -31,12 +30,12 @@ class Storage(BaseModule):
 
     @abstractmethod
     def find(
-            self,
-            collection: str,
-            query: dict,
-            sort: list = None,
-            page: int = 0,
-            limit: int = 0,
+        self,
+        collection: str,
+        query: dict,
+        sort: list = None,
+        page: int = 0,
+        limit: int = 0,
     ) -> list:
         pass
 

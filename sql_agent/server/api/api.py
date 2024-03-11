@@ -4,7 +4,6 @@ import os
 from typing import AsyncGenerator
 
 import pandas as pd
-
 from bson import ObjectId
 from fastapi import BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -23,6 +22,8 @@ from sql_agent.db.repositories.types import (
     EmbeddingInstruction,
     Instruction,
     InstructionEmbeddingRecord,
+    KnowledgeEmbeddingRecord,
+    KnowledgeEmbeddingStatus,
 )
 from sql_agent.llm.embedding_model import EmbeddingModel
 from sql_agent.planner.planner import Planner
@@ -33,7 +34,11 @@ from sql_agent.protocol import (
     CompletionInstructionSyncRequest,
     CompletionInstructionSyncStatusRequest,
     CompletionKnowledgeLoadRequest,
+    CompletionKnowledgeStatusRequest,
+    CompletionKnowledgeStopRequest,
     DatasourceAddRequest,
+    DatasourceDeleteRequest,
+    DatasourceUpdateRequest,
     DeltaMessage,
     ErrorResponse,
 )
@@ -53,7 +58,6 @@ class APIImpl(API):
         super().__init__()
         self.system = system
         self.csv_file_suffix = "_knowledge.csv"
-        self.doc_collection = "doc_collection"
         self.storage = system.get_module(Storage)
         self.doc_index = KnowledgeServiceImpl()
         self.embedding_model = EmbeddingModel()
@@ -91,8 +95,30 @@ class APIImpl(API):
         return BaseResponse(msg="成功", code=0, data={"id": datasource.id})
 
     @override
+    async def datasource_update(self, request: DatasourceUpdateRequest):
+        datasourceRepository = DatasourceRepository(self.storage)
+        datasource = datasourceRepository.find_by_id(request.id)
+        if datasource:
+            datasource.host = request.host
+            datasource.port = request.port
+            datasource.database = request.database
+            datasource.user_name = request.user_name
+            datasource.password = request.password
+            datasource.config = request.config
+            datasourceRepository.update(datasource)
+            return BaseResponse(msg="成功", code=0, data={})
+        else:
+            return BaseResponse(msg="数据源修改失败,未查询到指定数据源", code=404, data={})
+
+    @override
+    async def datasource_delete(self, request: DatasourceDeleteRequest):
+        datasourceRepository = DatasourceRepository(self.storage)
+        datasourceRepository.delete_by_id(request.id)
+        return BaseResponse(msg="成功", code=0, data={})
+
+    @override
     async def knowledge_train(
-            self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
+        self, request: CompletionKnowledgeLoadRequest, background_tasks: BackgroundTasks
     ):
         # 保存文件到指定路径
         file_contents = await request.file.read()
@@ -108,18 +134,43 @@ class APIImpl(API):
             logger.info("文件不存在")
             return create_error_response(404, "文件不存在")
         file_name = request.file_name
-        knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
-        knowledge_sync_repository.insert()
-        background_tasks.add_task(
-            self.load_file_vector_store, file_path, file_id, file_name
-        )
-        return True
+        logger.info(f"知识库文件上传: {file_name}")
+        # 当前版本限制为csv文件.
+        extension = file.get_file_extension(file_name)
+        if extension != "csv":
+            return BaseResponse(msg="暂不支持csv以外文档", code=10003, data={})
+        else:
+            knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
+            record = KnowledgeEmbeddingRecord(file_path=file_path, file_id=file_id)
+            record = knowledge_sync_repository.insert(record)
+            background_tasks.add_task(self.load_file_vector_store, file_path, record)
+        return BaseResponse(msg="成功", code=0, data={"id": record.id})
+
+    @override
+    async def knowledge_train_status(self, request: CompletionKnowledgeStatusRequest):
+        knowledgeSyncRepository = KnowledgeSyncRepository(self.storage)
+        record = knowledgeSyncRepository.find_one({"_id": ObjectId(request.id)})
+        if record:
+            return BaseResponse(msg="成功", code=0, data={"status": record.status})
+        else:
+            return BaseResponse(msg="未查询到知识库同步记录", code=404, data={})
+
+    @override
+    async def knowledge_train_stop(self, request: CompletionKnowledgeStopRequest):
+        knowledgeSyncRepository = KnowledgeSyncRepository(self.storage)
+        record = knowledgeSyncRepository.find_one({"_id": ObjectId(request.id)})
+        if record:
+            record.status = KnowledgeEmbeddingStatus.STOP.value
+            knowledgeSyncRepository.update(record)
+            return BaseResponse(msg="成功", code=0, data={})
+        else:
+            return BaseResponse(msg="未查询到知识库同步记录", code=404, data={})
 
     @override
     async def instruction_sync(
-            self,
-            request: CompletionInstructionSyncRequest,
-            background_tasks: BackgroundTasks,
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
     ):
         instructions = request.instructions
         if instructions:
@@ -131,28 +182,23 @@ class APIImpl(API):
         datasource_id = request.datasource_id
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
         instruction_repository = InstructionRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one(
-            {"datasource_id": datasource_id}
-        )
+        sync_embedding_record = embedding_repository.find_one({"datasource_id": datasource_id})
         if (
-                sync_embedding_record is None
-                or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
+            sync_embedding_record is None
+            or sync_embedding_record.status != DBEmbeddingStatus.EMBEDDING.value
         ):
             instruction_repository.delete_by({"datasource_id": datasource_id})
             if sync_embedding_record is None:
-                sync_embedding_record = InstructionEmbeddingRecord(
-                    datasource_id=datasource_id
-                )
+                sync_embedding_record = InstructionEmbeddingRecord(datasource_id=datasource_id)
                 embedding_repository.insert(sync_embedding_record)
             else:
                 sync_embedding_record.status = DBEmbeddingStatus.EMBEDDING.value
                 embedding_repository.update(sync_embedding_record)
-            self.save_instructions(instructions)
+            self.save_instructions(instructions, datasource_id)
         else:
-            return BaseResponse(
-                msg="成功", code=0, data={"id": sync_embedding_record.id}
-            )
+            return BaseResponse(msg="成功", code=0, data={"id": sync_embedding_record.id})
         success = True
+        instruction_repository.delete_embedding_by({"datasource_id": datasource_id})
         for page_data in page_array:
             save_result = self.process_page(page_data, sync_embedding_record.id)
             if isinstance(save_result, str) and save_result.startswith("Error"):
@@ -176,27 +222,21 @@ class APIImpl(API):
         return BaseResponse(msg="成功", code=0, data={"id": sync_embedding_record.id})
 
     @override
-    async def instruction_sync_status(
-            self, request: CompletionInstructionSyncStatusRequest
-    ):
+    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        sync_embedding_record = embedding_repository.find_one({"_id": ObjectId(request.id)})
         if sync_embedding_record is None:
             return BaseResponse(msg="查询失败,未查到同步记录", code=10002, data={})
         else:
-            return BaseResponse(
-                msg="成功", code=0, data={"status": sync_embedding_record.status}
-            )
+            return BaseResponse(msg="成功", code=0, data={"status": sync_embedding_record.status})
 
     @override
-    async def instruction_sync_stop(
-            self, request: CompletionInstructionSyncStatusRequest
-    ):
+    async def instruction_sync_stop(self, request: CompletionInstructionSyncStatusRequest):
         embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-        sync_embedding_record = embedding_repository.find_one({"_id": request.id})
+        sync_embedding_record = embedding_repository.find_one({"_id": ObjectId(request.id)})
         if (
-                sync_embedding_record
-                and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
+            sync_embedding_record
+            and sync_embedding_record.status == DBEmbeddingStatus.EMBEDDING.value
         ):
             sync_embedding_record.status = DBEmbeddingStatus.STOP.value
             embedding_repository.update(sync_embedding_record)
@@ -207,9 +247,7 @@ class APIImpl(API):
         if len(schema_list) > 0:
             instruction_repository = InstructionRepository(self.storage)
             embedding_repository = InstructionEmbeddingRecordRepository(self.storage)
-            embedding_record = embedding_repository.find_one(
-                {"_id": ObjectId(sync_embedding_id)}
-            )
+            embedding_record = embedding_repository.find_one({"_id": ObjectId(sync_embedding_id)})
             if embedding_record:
                 if embedding_record.status == DBEmbeddingStatus.SUCCESS.value:
                     return True
@@ -223,57 +261,52 @@ class APIImpl(API):
                 for db_schema in schema_list:
                     table_schema = db_schema.instruction
                     if table_schema:
-                        des = table_schema["description"]
-                        columns = table_schema["columns"]
+                        des = table_schema.description
+                        columns = table_schema.columns
                         column_str = ""
                         for column in columns:
-                            column_str += f" {column['name']} {column['description']}"
+                            column_str += f" {column.name} {column.description}"
                         table_fields.append(column_str)
                         table_comments.append(des)
-                comment_embedding = self.embedding_model.embed_query(
-                    table_comments
-                ).tolist()
-                column_embedding = self.embedding_model.embed_query(
-                    table_fields
-                ).tolist()
+                comment_embedding = self.embedding_model.embed_query(table_comments).tolist()
+                column_embedding = self.embedding_model.embed_query(table_fields).tolist()
                 for idx in range(len(schema_list)):
                     db_schema = schema_list[idx]
                     table_schema = db_schema.instruction
                     if table_schema:
-                        table_name = table_schema["table_name"]
+                        table_name = table_schema.name
                         table_comment_embedding = comment_embedding[idx]
                         table_column_embedding = column_embedding[idx]
                         db_embedding_instruction = EmbeddingInstruction(
                             table_name=table_name,
                             datasource_id=db_schema.datasource_id,
                             database=db_schema.database,
-                            table_comment=table_schema["description"],
+                            table_comment=table_schema.description,
                             table_comment_embedding=table_comment_embedding,
                             column_embedding=table_column_embedding,
                         )
-                        logger.info(
-                            f"保存表向量结果: {db_schema.database}-{table_name}"
-                        )
-                        instruction_repository.insert_embedding(
-                            db_embedding_instruction
-                        )
-                        logger.info(
-                            f"向量化Database: {db_schema.database} -> Table:{table_name} 结束"
-                        )
+                        logger.info(f"保存表向量结果: {db_schema.database}-{table_name}")
+                        instruction_repository.insert_embedding(db_embedding_instruction)
+                        logger.info(f"向量化Database: {db_schema.database} -> Table:{table_name} 结束")
             except Exception as e:
                 logger.error(f"向量化数据异常:{e}")
                 return f"Error 向量化数据失败"
             return f"Successful 向量化表结构成功"
 
-    def load_file_vector_store(self, file_path, file_id, file_name):
-        logger.info(f"知识库文件上传: {file_name}")
-        # 当前版本限制为csv文件.
-        extension = file.get_file_extension(file_name)
-        if extension != "csv":
-            return BaseResponse(msg="暂不支持csv以外文档", code=10003, data={})
-        else:
-            knowledge_csv = self.generator_knowledge_csv(file_path)
-            self.doc_index.upload_doc(knowledge_csv, self.doc_collection)
+    def load_file_vector_store(self, file_path, record):
+        knowledge_csv = self.generator_knowledge_csv(file_path)
+        knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
+        try:
+            success = self.doc_index.upload_doc(knowledge_csv, record.id)
+            if success:
+                record.status = KnowledgeEmbeddingStatus.SUCCESS.value
+            else:
+                record = knowledge_sync_repository.find_by_id(record.id)
+                if record.status == KnowledgeEmbeddingStatus.EMBEDDING.value:
+                    record.status = KnowledgeEmbeddingStatus.FAILED.value
+        except Exception as e:
+            record.status = KnowledgeEmbeddingStatus.FAILED.value
+        knowledge_sync_repository.update(record)
         # 1.增加同步状态,同步完后修改为成功
         os.remove(file_path)
 
@@ -281,24 +314,25 @@ class APIImpl(API):
         df = pd.read_csv(file_path)
         new_df = pd.DataFrame()
         new_df["knowledge"] = (
-                df.iloc[:, 0].astype(str)
-                + "包含"
-                + df.iloc[:, 1].astype(str)
-                + ","
-                + df.iloc[:, 1].astype(str)
-                + "包含有"
-                + df.iloc[:, 2].astype(str)
-                + ","
-                + df.iloc[:, 2].astype(str)
-                + "的计算方法是"
-                + df.iloc[:, 3].astype(str)
+            df.iloc[:, 0].astype(str)
+            + "包含"
+            + df.iloc[:, 1].astype(str)
+            + ","
+            + df.iloc[:, 1].astype(str)
+            + "包含有"
+            + df.iloc[:, 2].astype(str)
+            + ","
+            + df.iloc[:, 2].astype(str)
+            + "的计算方法是"
+            + df.iloc[:, 3].astype(str)
         )
         knowledge_csv = file_path.replace(".csv", self.csv_file_suffix)
         new_df.to_csv(knowledge_csv, index=False)
         return knowledge_csv
 
-    def save_instructions(self, instructions: list[Instruction]):
+    def save_instructions(self, instructions: list[Instruction], datasource_id: str):
         instruction_repository = InstructionRepository(self.storage)
+        instruction_repository.delete_by({"datasource_id": datasource_id})
         for instruction in instructions:
             instruction_repository.insert(instruction)
 
@@ -306,16 +340,16 @@ class APIImpl(API):
 def paginate_array(array, page_size):
     result = []
     for i in range(0, len(array), page_size):
-        result.append(array[i: i + page_size])
+        result.append(array[i : i + page_size])
     return result
 
 
 def make_stream_data(
-        content: str | dict | list,
-        rep_type: str = "stream",
-        model: str = "gpt-4-1106-preview",
-        finish_reason: str = "",
-        session_id: str = "",
+    content: str | dict | list,
+    rep_type: str = "stream",
+    model: str = "gpt-4-1106-preview",
+    finish_reason: str = "",
+    session_id: str = "",
 ):
     push_json = {"type": rep_type, "data": content}
     choice_data = ChatCompletionResponseStreamChoice(
@@ -326,13 +360,9 @@ def make_stream_data(
             finish_reason=finish_reason,
         ),
     )
-    chunk = ChatCompletionStreamResponse(
-        id=session_id, choices=[choice_data], model=model
-    )
+    chunk = ChatCompletionStreamResponse(id=session_id, choices=[choice_data], model=model)
     return chunk.model_dump_json(exclude_unset=True)
 
 
 def create_error_response(code: int, message: str) -> JSONResponse:
-    return JSONResponse(
-        ErrorResponse(message=message, code=code).dict(), status_code=400
-    )
+    return JSONResponse(ErrorResponse(message=message, code=code).dict(), status_code=400)

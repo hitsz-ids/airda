@@ -71,7 +71,9 @@ def get_column_info(tables: List[TableDescription]) -> str:
             for row in table.examples:
                 col_info += str(row[index]) + ", "
             col_info = col_info[:-2]
-            column_full_info += f"Table: {table_name}, column: {column_name}, additional info: {col_info}\n"
+            column_full_info += (
+                f"Table: {table_name}, column: {column_name}, additional info: {col_info}\n"
+            )
     return column_full_info
 
 
@@ -109,9 +111,7 @@ def sql_prompt(
     return prompt
 
 
-def sql_explain_prompt(
-    question: str, table_schema: str, knowledge: str, sql: str
-) -> str:
+def sql_explain_prompt(question: str, table_schema: str, knowledge: str, sql: str) -> str:
     prompt = SQL_ASSISTANT
     if table_schema:
         prompt += TABLE_SCHEMA_PROMPT.format(schema=table_schema)

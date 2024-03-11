@@ -10,3 +10,5 @@
 venv/
 
 test/
+# project
+poetry.lock

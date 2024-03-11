@@ -1,8 +1,9 @@
-from pydantic import BaseModel
-from pydantic.v1 import validator
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
+
+from pydantic import BaseModel
+from pydantic.v1 import validator
 
 
 class Datasource(BaseModel):
@@ -21,14 +22,6 @@ class Knowledge(BaseModel):
     source: str
     content: str
     content_embedding: Any
-
-
-class Instruction(BaseModel):
-    id: str | None = None
-    instruction: dict
-    datasource_id: str
-    database: str
-    table_name: str
 
 
 class EmbeddingInstruction(BaseModel):
@@ -108,3 +101,11 @@ class TableDescription(BaseModel):
         if not value:
             return None
         return value.replace(tzinfo=timezone.utc)  # Set the timezone to UTC
+
+
+class Instruction(BaseModel):
+    id: str | None = None
+    instruction: TableDescription
+    datasource_id: str
+    database: str
+    table_name: str

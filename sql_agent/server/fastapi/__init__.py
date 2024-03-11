@@ -9,16 +9,18 @@ from sql_agent.protocol import (
     CompletionInstructionSyncStatusRequest,
     CompletionInstructionSyncStopRequest,
     CompletionKnowledgeLoadRequest,
+    CompletionKnowledgeStatusRequest,
+    CompletionKnowledgeStopRequest,
     DatasourceAddRequest,
+    DatasourceDeleteRequest,
+    DatasourceUpdateRequest,
 )
 
 
 async def upload_file_form(
-        file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
+    file: UploadFile = File(...), file_id: str = Form(...), file_name: str = Form(...)
 ):
-    return CompletionKnowledgeLoadRequest(
-        file=file, file_id=file_id, file_name=file_name
-    )
+    return CompletionKnowledgeLoadRequest(file=file, file_id=file_id, file_name=file_name)
 
 
 class SQLAgentServer(WebFrameworkServer):
@@ -59,6 +61,20 @@ class SQLAgentServer(WebFrameworkServer):
         )
 
         self.router.add_api_route(
+            "/v1/datasource/update",
+            self.datasource_update,
+            methods=["POST"],
+            tags=["update datasource"],
+        )
+
+        self.router.add_api_route(
+            "/v1/datasource/delete",
+            self.datasource_delete,
+            methods=["POST"],
+            tags=["delete datasource"],
+        )
+
+        self.router.add_api_route(
             "/v1/instruction/sync",
             self.instruction_sync,
             methods=["POST"],
@@ -86,34 +102,56 @@ class SQLAgentServer(WebFrameworkServer):
             tags=["knowledge train"],
         )
 
+        self.router.add_api_route(
+            "/v1/knowledge/status",
+            self.knowledge_train_status,
+            methods=["GET"],
+            tags=["knowledge status"],
+        )
+
+        self.router.add_api_route(
+            "/v1/knowledge/stop",
+            self.knowledge_train_stop,
+            methods=["POST"],
+            tags=["knowledge stop"],
+        )
+
         self.app.include_router(self.router)
 
     async def create_completion(self, request: ChatCompletionRequest):
         return await self._api.create_completion(request)
 
     async def instruction_sync(
-            self,
-            request: CompletionInstructionSyncRequest,
-            background_tasks: BackgroundTasks,
+        self,
+        request: CompletionInstructionSyncRequest,
+        background_tasks: BackgroundTasks,
     ):
         return await self._api.instruction_sync(request, background_tasks)
 
-    async def instruction_sync_status(
-            self, request: CompletionInstructionSyncStatusRequest
-    ):
+    async def instruction_sync_status(self, request: CompletionInstructionSyncStatusRequest):
         return await self._api.instruction_sync_status(request)
 
-    async def instruction_sync_stop(
-            self, request: CompletionInstructionSyncStopRequest
-    ):
+    async def instruction_sync_stop(self, request: CompletionInstructionSyncStopRequest):
         return await self._api.instruction_sync_stop(request)
 
     async def datasource_add(self, request: DatasourceAddRequest):
         return await self._api.datasource_add(request)
 
+    async def datasource_update(self, request: DatasourceUpdateRequest):
+        return await self._api.datasource_update(request)
+
+    async def datasource_delete(self, request: DatasourceDeleteRequest):
+        return await self._api.datasource_delete(request)
+
     async def knowledge_train(
-            self,
-            background_tasks: BackgroundTasks,
-            request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
+        self,
+        background_tasks: BackgroundTasks,
+        request: CompletionKnowledgeLoadRequest = Depends(upload_file_form),
     ):
-        await self._api.knowledge_train(request, background_tasks)
+        return await self._api.knowledge_train(request, background_tasks)
+
+    async def knowledge_train_status(self, request: CompletionKnowledgeStatusRequest):
+        return await self._api.knowledge_train_status(request)
+
+    async def knowledge_train_stop(self, request: CompletionKnowledgeStopRequest):
+        return await self._api.knowledge_train_stop(request)

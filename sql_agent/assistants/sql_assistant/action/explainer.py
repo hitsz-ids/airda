@@ -3,7 +3,7 @@ from typing import AsyncGenerator
 
 from overrides import overrides
 
-from sql_agent.framework.assistant.action import ActionResultScope, ActionResult
+from sql_agent.framework.assistant.action import ActionResult, ActionResultScope
 from sql_agent.framework.assistant.action.llm_action import LlmAction
 from sql_agent.llm.openai import OpenAILLM
 from sql_agent.protocol import ChatCompletionRequest
@@ -30,7 +30,6 @@ SQL_EXPLAIN_QUESTION = """
 
 
 class Explainer(LlmAction):
-
     def __init__(self, request: ChatCompletionRequest, action_results: dict[str, dict]):
         super().__init__(request, action_results)
         self.llm_api = OpenAILLM()

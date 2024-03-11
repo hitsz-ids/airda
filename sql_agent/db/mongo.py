@@ -6,14 +6,13 @@ from overrides import override
 from pymongo import MongoClient
 from pymongo.typings import _DocumentType
 
-from sql_agent.setting import System, env_settings
 from sql_agent.db import Storage
+from sql_agent.setting import System, env_settings
 
 system = System()
 
 
 class MongoStorage(Storage):
-
     def __init__(self):
         super().__init__()
         self.init_storage()
@@ -24,9 +23,7 @@ class MongoStorage(Storage):
         username = env_settings.get("mongodb_username")
         password = env_settings.get("mongodb_password")
         if username and password:
-            self._data_store = MongoClient(uri, username=username, password=password)[
-                db_name
-            ]
+            self._data_store = MongoClient(uri, username=username, password=password)[db_name]
         else:
             self._data_store = MongoClient(uri)[db_name]
 
@@ -48,9 +45,7 @@ class MongoStorage(Storage):
         self._data_store[old_collection_name].rename(new_collection_name)
 
     @override
-    def rename_field(
-        self, collection_name: str, old_field_name: str, new_field_name: str
-    ) -> None:
+    def rename_field(self, collection_name: str, old_field_name: str, new_field_name: str) -> None:
         self._data_store[collection_name].update_many(
             {}, {"$rename": {old_field_name: new_field_name}}
         )
@@ -88,9 +83,7 @@ class MongoStorage(Storage):
     def find_all(self, collection: str, page: int = 0, limit: int = 0) -> list:
         if page > 0 and limit > 0:
             skip_count = (page - 1) * limit
-            return list(
-                self._data_store[collection].find({}).skip(skip_count).limit(limit)
-            )
+            return list(self._data_store[collection].find({}).skip(skip_count).limit(limit))
         return list(self._data_store[collection].find({}))
 
     @override

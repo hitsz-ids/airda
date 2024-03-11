@@ -45,11 +45,11 @@ CPU：8核
 项目存储依赖mongodb，在开始安装之前需要提前安装
 #### 源码部署
 
-> SQLAgent依赖Python >= 3.9
+> SQLAgent依赖Python >= 3.10
 
 1、[可选] 创建conda环境
 
-    conda create -n sqlagent python=3.9
+    conda create -n sqlagent python=3.10
     conda activate sqlagent
 
 2、可以通过运行以下命令来下载源码和安装依赖：
@@ -58,7 +58,12 @@ CPU：8核
     git clone https://github.com/hitsz-ids/SQLAgent.git``
     cd SQLAgent
     # 安装依赖
-    pip install -r requirements.txt
+    安装poetry
+    python -m pip install poetry
+    安装依赖
+    poetry install
+
+
 
 3、创建``.env``文件，可以从``.env_template``文件复制
 
@@ -68,7 +73,7 @@ CPU：8核
 
     # mongodb 配置
     MONGODB_URI="mongodb://localhost:27017"
-    MONGODB_DB_NAME='sqlagent'
+    MONGODB_DB_NAME='sql_agent'
     MONGODB_DB_USERNAME=''
     MONGODB_DB_PASSWORD=''
     # OpenAI 配置，留空即可
@@ -81,7 +86,7 @@ CPU：8核
 
 5、启动服务
 
-    python sqlagent/server.py
+    python startup.py
 
 #### Docker部署
 

@@ -1,5 +1,5 @@
 import time
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 import shortuuid
 from fastapi import File, UploadFile
@@ -30,6 +30,14 @@ class CompletionKnowledgeLoadRequest(BaseModel):
     file: UploadFile = File(...)
 
 
+class CompletionKnowledgeStatusRequest(BaseModel):
+    id: str
+
+
+class CompletionKnowledgeStopRequest(BaseModel):
+    id: str
+
+
 class DatasourceAddRequest(BaseModel):
     type: str
     host: str
@@ -40,8 +48,22 @@ class DatasourceAddRequest(BaseModel):
     config: dict[str, str] | None = None
 
 
+class DatasourceUpdateRequest(BaseModel):
+    id: str
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: dict[str, str] | None = None
+
+
+class DatasourceDeleteRequest(BaseModel):
+    id: str
+
+
 class CompletionInstructionSyncRequest(BaseModel):
-    instructions: str | list[Instruction]
+    instructions: list[Instruction]
     datasource_id: str
 
 

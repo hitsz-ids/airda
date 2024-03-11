@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class EmbeddingModel(metaclass=Singleton):
-
     def __init__(self) -> None:
         super().__init__()
         self._init_model()
@@ -19,14 +18,10 @@ class EmbeddingModel(metaclass=Singleton):
     def _init_model(self):
         model_name = os.getenv("EMBEDDINGS_MODEL_NAME", "infgrad/stella-large-zh-v2")
         try:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name, local_files_only=True
-            )
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
         except Exception as e:
             logger.error(f"加载tokenizer错误:{e}")
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                model_name, local_files_only=True
-            )
+            self.tokenizer = AutoTokenizer.from_pretrained(model_name, local_files_only=True)
         try:
             self.model = AutoModel.from_pretrained(model_name, local_files_only=True)
         except Exception as e:

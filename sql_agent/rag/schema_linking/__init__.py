@@ -2,10 +2,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from sql_agent.setting import System
 from sql_agent.db import Storage
 from sql_agent.llm.embedding_model import EmbeddingModel
-
+from sql_agent.setting import System
 
 system = System()
 
