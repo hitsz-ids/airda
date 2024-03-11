@@ -37,6 +37,8 @@ from sql_agent.protocol import (
     CompletionKnowledgeStatusRequest,
     CompletionKnowledgeStopRequest,
     DatasourceAddRequest,
+    DatasourceDeleteRequest,
+    DatasourceUpdateRequest,
     DeltaMessage,
     ErrorResponse,
 )
@@ -91,6 +93,28 @@ class APIImpl(API):
         datasourceRepository.insert(datasource)
 
         return BaseResponse(msg="成功", code=0, data={"id": datasource.id})
+
+    @override
+    async def datasource_update(self, request: DatasourceUpdateRequest):
+        datasourceRepository = DatasourceRepository(self.storage)
+        datasource = datasourceRepository.find_by_id(request.id)
+        if datasource:
+            datasource.host = request.host
+            datasource.port = request.port
+            datasource.database = request.database
+            datasource.user_name = request.user_name
+            datasource.password = request.password
+            datasource.config = request.config
+            datasourceRepository.update(datasource)
+            return BaseResponse(msg="成功", code=0, data={})
+        else:
+            return BaseResponse(msg="数据源修改失败,未查询到指定数据源", code=404, data={})
+
+    @override
+    async def datasource_delete(self, request: DatasourceDeleteRequest):
+        datasourceRepository = DatasourceRepository(self.storage)
+        datasourceRepository.delete_by_id(request.id)
+        return BaseResponse(msg="成功", code=0, data={})
 
     @override
     async def knowledge_train(

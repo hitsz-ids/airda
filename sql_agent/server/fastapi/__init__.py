@@ -12,6 +12,8 @@ from sql_agent.protocol import (
     CompletionKnowledgeStatusRequest,
     CompletionKnowledgeStopRequest,
     DatasourceAddRequest,
+    DatasourceDeleteRequest,
+    DatasourceUpdateRequest,
 )
 
 
@@ -56,6 +58,20 @@ class SQLAgentServer(WebFrameworkServer):
             self.datasource_add,
             methods=["POST"],
             tags=["add datasource"],
+        )
+
+        self.router.add_api_route(
+            "/v1/datasource/update",
+            self.datasource_update,
+            methods=["POST"],
+            tags=["update datasource"],
+        )
+
+        self.router.add_api_route(
+            "/v1/datasource/delete",
+            self.datasource_delete,
+            methods=["POST"],
+            tags=["delete datasource"],
         )
 
         self.router.add_api_route(
@@ -120,6 +136,12 @@ class SQLAgentServer(WebFrameworkServer):
 
     async def datasource_add(self, request: DatasourceAddRequest):
         return await self._api.datasource_add(request)
+
+    async def datasource_update(self, request: DatasourceUpdateRequest):
+        return await self._api.datasource_update(request)
+
+    async def datasource_delete(self, request: DatasourceDeleteRequest):
+        return await self._api.datasource_delete(request)
 
     async def knowledge_train(
         self,

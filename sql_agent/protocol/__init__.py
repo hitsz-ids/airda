@@ -48,6 +48,20 @@ class DatasourceAddRequest(BaseModel):
     config: dict[str, str] | None = None
 
 
+class DatasourceUpdateRequest(BaseModel):
+    id: str
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: dict[str, str] | None = None
+
+
+class DatasourceDeleteRequest(BaseModel):
+    id: str
+
+
 class CompletionInstructionSyncRequest(BaseModel):
     instructions: list[Instruction]
     datasource_id: str

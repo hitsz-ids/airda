@@ -10,6 +10,8 @@ from sql_agent.protocol import (
     CompletionKnowledgeStatusRequest,
     CompletionKnowledgeStopRequest,
     DatasourceAddRequest,
+    DatasourceDeleteRequest,
+    DatasourceUpdateRequest,
 )
 from sql_agent.setting import BaseModule
 
@@ -21,6 +23,14 @@ class API(BaseModule, ABC):
 
     @abstractmethod
     async def datasource_add(self, request: DatasourceAddRequest):
+        pass
+
+    @abstractmethod
+    async def datasource_update(self, request: DatasourceUpdateRequest):
+        pass
+
+    @abstractmethod
+    async def datasource_delete(self, request: DatasourceDeleteRequest):
         pass
 
     @abstractmethod
