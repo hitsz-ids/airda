@@ -1,7 +1,6 @@
 from typing import AsyncGenerator
 
 from sql_agent.framework.assistant.base import Assistant
-from sql_agent.protocol import ChatCompletionRequest
 
 
 class Task:

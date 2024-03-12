@@ -42,7 +42,8 @@ class BaseModule(ABC):
 setting_module_keys: dict[str, str] = {
     "sql_agent.server.api.API": "api_impl",
     "sql_agent.db.Storage": "storage_impl",
-    "sql_agent.llm.LLM": "llm_impl",
+    "sql_agent.llm.ChatLLM": "chat_llm_impl",
+    "sql_agent.llm.SQLLLM": "sql_llm_impl",
 }
 
 
@@ -56,10 +57,13 @@ class EnvSettings(metaclass=Singleton):
     storage_impl: str = os.getenv("Storage", "sql_agent.db.mongo.MongoStorage")
 
     # 语言大模型实现类路径
-    llm_impl: str = os.getenv("LLM", "sql_agent.llm.openai.OpenAILLM")
+    chat_llm_impl: str = os.getenv("CHAT_LLM", "sql_agent.llm.openai.OpenAILLM")
+    sql_llm_impl: str = os.getenv("SQL_LLM", "sql_agent.llm.openai.OpenAILLM")
 
     # 向量化模型名称
-    embeddings_model_name: str = os.getenv("EMBEDDINGS_MODEL_NAME", "infgrad/stella-large-zh-v2")
+    embeddings_model_name: str = os.getenv(
+        "EMBEDDINGS_MODEL_NAME", "infgrad/stella-large-zh-v2"
+    )
 
     # mongo环境变量
     mongodb_uri: str | None = os.getenv("MONGODB_URI")
@@ -122,7 +126,9 @@ class System(metaclass=Singleton):
         return cast(T, self._cache_modules[module_type])
 
     def get_process_pool(self):
-        return concurrent.futures.ProcessPoolExecutor(max_workers=int(env_settings.max_works))
+        return concurrent.futures.ProcessPoolExecutor(
+            max_workers=int(env_settings.max_works)
+        )
 
 
 def get_class_type(import_path: str) -> Type[M]:

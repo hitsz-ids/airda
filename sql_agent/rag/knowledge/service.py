@@ -22,7 +22,9 @@ def calculate_similarity(args):
     query_embedding, knowledge_list = args
     knowledge_result = []
     for knowledge_item in knowledge_list:
-        score = schema_linking.calc_score(query_embedding, knowledge_item.content_embedding)
+        score = schema_linking.calc_score(
+            query_embedding, knowledge_item.content_embedding
+        )
         knowledge_score = {
             "id": knowledge_item.id,
             "score": score,
@@ -39,8 +41,9 @@ class KnowledgeServiceImpl(KnowledgeService):
         super().__init__()
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
-        self.knowledge_repository = KnowledgeStorage(system.get_module(Storage))
-        self.knowledge_sync_repository = KnowledgeSyncRepository(system.get_module(Storage))
+        self.storage = system.get_module(Storage)
+        self.knowledge_repository = KnowledgeStorage(self.storage)
+        self.knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
         self.process_pool = system.get_process_pool()
 
     @override
@@ -53,12 +56,18 @@ class KnowledgeServiceImpl(KnowledgeService):
         query_embedding = self.embedding_model.embed_query(query_texts)[0]
         futures = []
         while page_size == 20:
-            result = self.knowledge_repository.find_by(query_condition, page=page, limit=page_size)
-            task = self.process_pool.submit(calculate_similarity, (query_embedding, result))
+            result = self.knowledge_repository.find_by(
+                query_condition, page=page, limit=page_size
+            )
+            task = self.process_pool.submit(
+                calculate_similarity, (query_embedding, result)
+            )
             futures.append(task)
             page_size = len(result)
             page += 1
-        results = [future.result() for future in concurrent.futures.as_completed(futures)]
+        results = [
+            future.result() for future in concurrent.futures.as_completed(futures)
+        ]
         docs = []
         if results:
             knowledge_score_list = []
@@ -91,7 +100,9 @@ class KnowledgeServiceImpl(KnowledgeService):
                 if record.status == KnowledgeEmbeddingStatus.STOP.value:
                     logger.info("已手动停止,上传终止")
                     return False
-                content_embedding = self.embedding_model.embed_query(text.page_content).tolist()
+                content_embedding = self.embedding_model.embed_query(
+                    text.page_content
+                ).tolist()
                 knowledge = Knowledge(
                     source=file_path,
                     content=text.page_content,

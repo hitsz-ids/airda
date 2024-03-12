@@ -21,3 +21,11 @@ class LLM(BaseModule):
         self, messages: list[ChatMessage], model_name: str, session_id: str
     ) -> AsyncGenerator[str, None]:
         pass
+
+
+class ChatLLM(LLM):
+    pass
+
+
+class SQLLLM(LLM):
+    pass

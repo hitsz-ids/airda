@@ -15,13 +15,12 @@ class ErrorResponse(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    messages: list["DeltaMessage"]
+    question: str
     datasource_id: str
     database: str
     knowledge: str
     session_id: str
     sql_type: str = "mysql"
-    file_path: str
     file_name: str
     file_id: str
 
