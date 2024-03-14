@@ -42,7 +42,8 @@ class BaseModule(ABC):
 setting_module_keys: dict[str, str] = {
     "sql_agent.server.api.API": "api_impl",
     "sql_agent.db.Storage": "storage_impl",
-    "sql_agent.llm.LLM": "llm_impl",
+    "sql_agent.llm.ChatLLM": "chat_llm_impl",
+    "sql_agent.llm.SQLLLM": "sql_llm_impl",
 }
 
 
@@ -56,7 +57,8 @@ class EnvSettings(metaclass=Singleton):
     storage_impl: str = os.getenv("Storage", "sql_agent.db.mongo.MongoStorage")
 
     # 语言大模型实现类路径
-    llm_impl: str = os.getenv("LLM", "sql_agent.llm.openai.OpenAILLM")
+    chat_llm_impl: str = os.getenv("CHAT_LLM", "sql_agent.llm.openai.OpenAILLM")
+    sql_llm_impl: str = os.getenv("SQL_LLM", "sql_agent.llm.openai.OpenAILLM")
 
     # 向量化模型名称
     embeddings_model_name: str = os.getenv("EMBEDDINGS_MODEL_NAME", "infgrad/stella-large-zh-v2")

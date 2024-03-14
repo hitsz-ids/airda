@@ -30,10 +30,9 @@ class Searcher(Action):
         """
         调用RAG，得到搜索内容
         """
-        # knowledge = self._search_knowledge()
-        knowledge = ""
+        knowledge = self._search_knowledge()
         tables_description = self._search_tables()
-        # few_shot = self._search_few_show()
+        # few_shot = self._search_few_shot()
 
         result = {
             "knowledge": knowledge,
@@ -53,13 +52,8 @@ class Searcher(Action):
                 f"{env_settings.knowledge_path}/{file_id}/{file_name.replace('.csv', '_knowledge.csv')}"
             ]
 
-        query_message = ""
-        for obj in reversed(self._request.messages):
-            if obj.role == "user":
-                query_message = obj.content
-                break
         docs = self.doc_index.query_doc(
-            query_texts=query_message,
+            query_texts=self._request.question,
             source=source,
             num_results=2,
         )
@@ -73,7 +67,7 @@ class Searcher(Action):
         return knowledge
 
     def _search_tables(self):
-        question = self._request.messages[0].content
+        question = self._request.question
         datasource_id = self._request.datasource_id
         database = self._request.database
         limit_score_result, top_k_result = self.schema_linking.search(
@@ -104,7 +98,7 @@ class Searcher(Action):
             results.append(table_description)
         return results
 
-    def _search_few_show(self):
+    def _search_few_shot(self):
         # database = self._request.database
         # datasource_id = self._request.datasource_id
         # context_store = system.get_module(ContextStore)
@@ -114,11 +108,11 @@ class Searcher(Action):
         #     database=database,
         # )
         # few_shot_examples = context_store.get_golden_records(nl_question, 5)
-        # format_few_show(few_shot_examples)
+        # format_few_shot(few_shot_examples)
         pass
 
 
-def format_few_show(few_shot_examples: list):
+def format_few_shot(few_shot_examples: list):
     few_shot = "\n"
     for example in few_shot_examples:
         few_shot += f"Question: {example['nl_question']} -> SQL: {example['sql_query']} \n"
@@ -126,4 +120,7 @@ def format_few_show(few_shot_examples: list):
 
 
 def extract_table_schema(tables_description: list[TableDescription]) -> str:
-    return "\n".join(item.table_schema for item in tables_description) + "\n"
+    if len(tables_description) > 0:
+        return "\n".join(item.table_schema for item in tables_description) + "\n"
+    else:
+        return []

@@ -4,8 +4,6 @@ from sql_agent.framework.assistant.base import Assistant
 
 
 class ChatAssistant(Assistant):
-    _prompt: ""
-
     def before(self, action: Action):
         pass
 

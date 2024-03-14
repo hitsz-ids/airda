@@ -5,8 +5,10 @@ from overrides import overrides
 
 from sql_agent.framework.assistant.action import ActionResult, ActionResultScope
 from sql_agent.framework.assistant.action.llm_action import LlmAction
+from sql_agent.llm import ChatLLM
 from sql_agent.llm.openai import OpenAILLM
 from sql_agent.protocol import ChatCompletionRequest
+from sql_agent.setting import System
 
 SQL_ASSISTANT = """
 你是一个世界级SQL专家
@@ -28,11 +30,13 @@ SQL_EXPLAIN_QUESTION = """
 {sql}
 """
 
+system = System()
+
 
 class Explainer(LlmAction):
     def __init__(self, request: ChatCompletionRequest, action_results: dict[str, dict]):
         super().__init__(request, action_results)
-        self.llm_api = OpenAILLM()
+        self.llm_api = system.get_module(ChatLLM)
 
     def init_name(self):
         return "Explainer"
@@ -50,7 +54,7 @@ class Explainer(LlmAction):
                 yield token
 
     def init_prompt(self):
-        question = self._request.messages[0].content
+        question = self._request.question
         generator_result = self._actions_results.get("SQLGenerator")
         searcher_result = self._actions_results.get("Searcher")
 

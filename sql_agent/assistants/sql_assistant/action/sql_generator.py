@@ -4,8 +4,10 @@ from overrides import overrides
 
 from sql_agent.framework.assistant.action import ActionResult
 from sql_agent.framework.assistant.action.llm_action import LlmAction
+from sql_agent.llm import SQLLLM
 from sql_agent.llm.openai import OpenAILLM
 from sql_agent.protocol import ChatCompletionRequest
+from sql_agent.setting import System
 
 SQL_ASSISTANT = """
 你是一个世界级SQL专家
@@ -38,11 +40,13 @@ FEW_SHOT_EXAMPLE = """
 {few_shot_example}
 """
 
+system = System()
+
 
 class SQLGenerator(LlmAction):
     def __init__(self, request: ChatCompletionRequest, action_results: dict[str, dict]):
         super().__init__(request, action_results)
-        self.llm_api = OpenAILLM()
+        self.llm_api = system.get_module(SQLLLM)
 
     def init_name(self):
         return "SQLGenerator"
@@ -60,9 +64,8 @@ class SQLGenerator(LlmAction):
         yield sql
 
     def init_prompt(self):
-        messages = self._request.messages
+        question = self._request.question
         sql_type = self._request.sql_type
-        question = messages[-1].content
         searcher_param = self._actions_results.get("Searcher")
         table_schema = searcher_param.get("table_schema")
         knowledge = searcher_param.get("knowledge")

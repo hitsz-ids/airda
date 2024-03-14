@@ -39,8 +39,9 @@ class KnowledgeServiceImpl(KnowledgeService):
         super().__init__()
         self.embedding_model = EmbeddingModel()
         self.csv_file_suffix = "_knowledge.csv"
-        self.knowledge_repository = KnowledgeStorage(system.get_module(Storage))
-        self.knowledge_sync_repository = KnowledgeSyncRepository(system.get_module(Storage))
+        self.storage = system.get_module(Storage)
+        self.knowledge_repository = KnowledgeStorage(self.storage)
+        self.knowledge_sync_repository = KnowledgeSyncRepository(self.storage)
         self.process_pool = system.get_process_pool()
 
     @override
