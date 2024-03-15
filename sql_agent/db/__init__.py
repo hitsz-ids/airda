@@ -1,13 +1,9 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from sql_agent.config import Component, System
+from sql_agent.setting import BaseModule
 
 
-class DB(Component, ABC):
-    @abstractmethod
-    def __init__(self, system: System):
-        self.system = system
-
+class Storage(BaseModule):
     @abstractmethod
     def insert_one(self, collection: str, obj: dict) -> int:
         pass
@@ -17,9 +13,7 @@ class DB(Component, ABC):
         pass
 
     @abstractmethod
-    def rename_field(
-            self, collection_name: str, old_field_name: str, new_field_name: str
-    ) -> None:
+    def rename_field(self, collection_name: str, old_field_name: str, new_field_name: str) -> None:
         pass
 
     @abstractmethod
@@ -36,12 +30,12 @@ class DB(Component, ABC):
 
     @abstractmethod
     def find(
-            self,
-            collection: str,
-            query: dict,
-            sort: list = None,
-            page: int = 0,
-            limit: int = 0,
+        self,
+        collection: str,
+        query: dict,
+        sort: list = None,
+        page: int = 0,
+        limit: int = 0,
     ) -> list:
         pass
 
@@ -51,4 +45,8 @@ class DB(Component, ABC):
 
     @abstractmethod
     def delete_by_id(self, collection: str, id: str) -> int:
+        pass
+
+    @abstractmethod
+    def delete_by(self, collection: str, query: dict) -> int:
         pass

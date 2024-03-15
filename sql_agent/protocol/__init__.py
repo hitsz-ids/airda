@@ -1,8 +1,11 @@
 import time
-from typing import Literal, Optional, List, Dict, Any, Union
+from typing import Literal, Optional
 
 import shortuuid
+from fastapi import File, UploadFile
 from pydantic import BaseModel, Field
+
+from sql_agent.db.repositories.types import Instruction
 
 
 class ErrorResponse(BaseModel):
@@ -11,79 +14,74 @@ class ErrorResponse(BaseModel):
     code: int
 
 
-class ModelPermission(BaseModel):
-    id: str = Field(default_factory=lambda: f"modelperm-{shortuuid.random()}")
-    object: str = "model_permission"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    allow_create_engine: bool = False
-    allow_sampling: bool = True
-    allow_logprobs: bool = True
-    allow_search_indices: bool = True
-    allow_view: bool = True
-    allow_fine_tuning: bool = False
-    organization: str = "*"
-    group: Optional[str] = None
-    is_blocking: str = False
-
-
-class ModelCard(BaseModel):
-    id: str
-    object: str = "model"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    owned_by: str = "fastchat"
-    root: Optional[str] = None
-    parent: Optional[str] = None
-    permission: List[ModelPermission] = []
-
-
-class ModelList(BaseModel):
-    object: str = "list"
-    data: List[ModelCard] = []
-
-
-class UsageInfo(BaseModel):
-    prompt_tokens: int = 0
-    total_tokens: int = 0
-    completion_tokens: Optional[int] = 0
-
-
 class ChatCompletionRequest(BaseModel):
-    model: str
-    messages: Union[str, List[Dict[str, str]]]
-    temperature: Optional[float] = 0.7
-    top_p: Optional[float] = 1.0
-    n: Optional[int] = 1
-    max_tokens: Optional[int] = None
-    stop: Optional[Union[str, List[str]]] = None
-    stream: Optional[bool] = False
-    presence_penalty: Optional[float] = 0.0
-    frequency_penalty: Optional[float] = 0.0
-    user: Optional[str] = None
+    question: str
+    datasource_id: str
+    database: str
+    knowledge: str
+    session_id: str
+    sql_type: str = "mysql"
+    file_name: str
+    file_id: str
 
 
-class ChatMessage(BaseModel):
-    role: str
-    content: str
+class CompletionKnowledgeLoadRequest(BaseModel):
+    file_id: str
+    file_name: str
+    file: UploadFile = File(...)
 
 
-class ChatCompletionResponseChoice(BaseModel):
-    index: int
-    message: ChatMessage
-    finish_reason: Optional[Literal["stop", "length"]] = None
+class CompletionKnowledgeStatusRequest(BaseModel):
+    id: str
 
 
-class ChatCompletionResponse(BaseModel):
-    id: str = Field(default_factory=lambda: f"chatcmpl-{shortuuid.random()}")
-    object: str = "chat.completion"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    model: str
-    choices: List[ChatCompletionResponseChoice]
-    usage: UsageInfo
+class CompletionKnowledgeStopRequest(BaseModel):
+    id: str
+
+
+class DatasourceAddRequest(BaseModel):
+    type: str
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: dict[str, str] | None = None
+
+
+class DatasourceUpdateRequest(BaseModel):
+    id: str
+    host: str
+    port: int
+    database: str
+    user_name: str
+    password: str
+    config: dict[str, str] | None = None
+
+
+class DatasourceDeleteRequest(BaseModel):
+    id: str
+
+
+class CompletionInstructionSyncRequest(BaseModel):
+    instructions: list[Instruction]
+    datasource_id: str
+
+
+class CompletionInstructionSyncStatusRequest(BaseModel):
+    id: str
+
+
+class CompletionInstructionSyncStopRequest(BaseModel):
+    id: str
+
+
+ChatMessage = dict[Literal["role", "content"], str]
 
 
 class DeltaMessage(BaseModel):
-    role: Optional[str] = None
-    content: Optional[str] = None
+    role: str
+    content: str
 
 
 class ChatCompletionResponseStreamChoice(BaseModel):
@@ -97,103 +95,11 @@ class ChatCompletionStreamResponse(BaseModel):
     object: str = "chat.completion.chunk"
     created: int = Field(default_factory=lambda: int(time.time()))
     model: str
-    choices: List[ChatCompletionResponseStreamChoice]
+    choices: list[ChatCompletionResponseStreamChoice]
 
 
-class TokenCheckRequestItem(BaseModel):
-    model: str
-    prompt: str
-    max_tokens: int
-
-
-class TokenCheckRequest(BaseModel):
-    prompts: List[TokenCheckRequestItem]
-
-
-class TokenCheckResponseItem(BaseModel):
-    fits: bool
-    tokenCount: int
-    contextLength: int
-
-
-class TokenCheckResponse(BaseModel):
-    prompts: List[TokenCheckResponseItem]
-
-
-class EmbeddingsRequest(BaseModel):
-    model: Optional[str] = None
-    engine: Optional[str] = None
-    input: Union[str, List[Any]]
-    user: Optional[str] = None
-    encoding_format: Optional[str] = None
-
-
-class EmbeddingsResponse(BaseModel):
-    object: str = "list"
-    data: List[Dict[str, Any]]
-    model: str
-    usage: UsageInfo
-
-
-class CompletionRequest(BaseModel):
-    model: str
-    prompt: Union[str, List[Any]]
-    suffix: Optional[str] = None
-    temperature: Optional[float] = 0.7
-    n: Optional[int] = 1
-    max_tokens: Optional[int] = 16
-    stop: Optional[Union[str, List[str]]] = None
-    stream: Optional[bool] = False
-    top_p: Optional[float] = 1.0
-    logprobs: Optional[int] = None
-    echo: Optional[bool] = False
-    presence_penalty: Optional[float] = 0.0
-    frequency_penalty: Optional[float] = 0.0
-    user: Optional[str] = None
-
-
-class CompletionResponseChoice(BaseModel):
-    index: int
-    text: str
-    logprobs: Optional[int] = None
-    finish_reason: Optional[Literal["stop", "length"]] = None
-
-
-class CompletionResponse(BaseModel):
-    id: str = Field(default_factory=lambda: f"cmpl-{shortuuid.random()}")
-    object: str = "text_completion"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    model: str
-    choices: List[CompletionResponseChoice]
-    usage: UsageInfo
-
-
-class CompletionResponseStreamChoice(BaseModel):
-    index: int
-    text: str
-    logprobs: Optional[float] = None
-    finish_reason: Optional[Literal["stop", "length"]] = None
-
-
-class CompletionStreamResponse(BaseModel):
-    id: str = Field(default_factory=lambda: f"cmpl-{shortuuid.random()}")
-    object: str = "text_completion"
-    created: int = Field(default_factory=lambda: int(time.time()))
-    model: str
-    choices: List[CompletionResponseStreamChoice]
-
-
-class CompletionKnowledgeLoadRequest(BaseModel):
-    file_id: str
-    file_path: str
-    file_name: str
-
-
-class CompletionKnowledgeDeleteRequest(BaseModel):
-    file_path: str
-
-
-class CompletionGoldenSQLAddRequest(BaseModel):
+class Question(BaseModel):
+    id: str | None = None
     question: str
-    sql: str
-    db_connection_id: str
+    datasource_id: str
+    database: str

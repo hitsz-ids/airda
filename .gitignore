@@ -4,8 +4,12 @@
 .DS_Store
 
 #Python cache
-**/__pycache__/**
-
+**/__pycache__
 
 # Env
 .env
+venv/
+
+test/
+# project
+poetry.lock

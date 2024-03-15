@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "sql-agent"
+version = "0.1.0"
+description = "text2sql-agent"
+authors = ["hitsz-ids"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas="2.1.1"
+fastapi="0.99.1"
+langchain="0.0.340"
+tiktoken="0.5.1"
+uvicorn="0.23.2"
+python-dotenv="1.0.0"
+shortuuid="1.0.11"
+chromadb="0.4.6"
+unstructured="0.10.16"
+python-docx="0.8.11"
+bson-py="1.0.0"
+httpx="0.24.1"
+pymongo="4.4.0"
+sql-metadata="2.8.0"
+sqlparse="0.4.4"
+pyarmor="7.7.4"
+python-multipart="0.0.6"
+pydantic="1.10.12"
+overrides="7.4.0"
+psycopg2="2.9.9"
+jieba="0.42.1"
+openpyxl="3.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
