@@ -1,0 +1,31 @@
+name: Pre-commit Check
+
+on:
+  push:
+    paths:
+      - 'sql_agent/**' # 检测sql_agent 目录下所有文件
+
+jobs:
+  pre-commit-check:
+    name: Pre-commit Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'  # 你的项目所需的 Python 版本
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
+
+      # 如果检查失败，你可以选择终止 workflow 并将状态设置为失败
+      # - name: Fail workflow on pre-commit check failure
+      #   if: ${{ failure() }}
+      #   run: exit 1

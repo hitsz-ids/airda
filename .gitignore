@@ -8,7 +8,7 @@
 # Env
 .env
 venv/
-
+build/
 test/
 # project
 poetry.lock
