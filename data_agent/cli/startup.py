@@ -2,7 +2,6 @@ import asyncio
 import logging.config
 import os
 import sys
-import time
 
 import click
 import yaml
@@ -304,9 +303,14 @@ def delete(name: str):
     datasource_repository.delete(name)
 
 
+current_directory = os.getcwd()
+config_path_dir = os.path.dirname(current_directory)
+env_path = config_path_dir + "/" + ".env"
+log_path = config_path_dir + "/" + "log_config.yml"
+
 if __name__ == "__main__":
-    DataAgentEnv("/Users/jianchuanli/Documents/GitHub/SQLAgent/.env")
-    with open("/Users/jianchuanli/Documents/GitHub/SQLAgent/log_config.yml", "r") as f:
+    DataAgentEnv(env_path)
+    with open(log_path, "r") as f:
         config = yaml.safe_load(f)
         logging.config.dictConfig(config)
     main()
