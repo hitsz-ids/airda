@@ -1,6 +1,6 @@
 # SQLAGENT
 
-<img src="/asset/robot.jpeg" width = "300" height = "300" alt="图片名称" align=center />
+<img src="./assets/robot.jpeg" width = "300" height = "300" alt="图片名称" align=center />
 
 ## 总览
 SQLAgent 是一个 **开源的（Open source）、大模型驱动的（LLM-Powered）、专注于私有化部署的Text2SQL 智能体（Agent）** 项目（Project），我们的目标是提供产品级的Text2SQL解决方案，致力于解决Text2SQL在实际应用中遇到的各种问题如模型私有化部署、面向Text2SQL任务的RAG最佳方案等等。为此，我们将持续探索什么是Text2SQL在实际应用中的最佳实践。
@@ -31,7 +31,7 @@ SQLAgent 是一个 **开源的（Open source）、大模型驱动的（LLM-Power
 - **图表生成**：根据SQL查询的结果动态生成图表。
 
 ## 推理性能
-![performance image](/asset/performance.png)
+![performance image](/assets/performance.png)
 
 ## 在线演示系统
 即将上线、敬请期待.....

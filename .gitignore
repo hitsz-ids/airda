@@ -1,6 +1,8 @@
 # IDE cache
 .idea
 .vscode
+# mac cache
+.DS_Store
 
 #Python cache
 **/__pycache__
@@ -9,6 +11,14 @@
 .env
 venv/
 
-test/
 # project
 poetry.lock
+
+# build
+dist/
+
+# config
+data_agent.log
+log_config.yml
+
+# poetry
