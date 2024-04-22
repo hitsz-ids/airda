@@ -1,11 +1,11 @@
 import asyncio
 import logging.config
 import os
-import sys
 
 import click
 import yaml
-from prompt_toolkit import PromptSession
+from prompt_toolkit import HTML, PromptSession, print_formatted_text
+from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
 from data_agent.agent.agent import DataAgent
@@ -19,23 +19,35 @@ from data_agent.agent.storage.repositories.datasource_repository import (
 from data_agent.connector.mysql import MysqlConnector
 from data_agent.server.agent_server import DataAgentServer
 
-# 获取当前文件所在目录的上两层目录的绝对路径
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# 添加上两层目录到sys.path
-sys.path.append(current_dir)
-# 定义样式
 style = Style.from_dict(
     {
-        "prompt": "bold #50fa7b",
-        "input": "#f8f8f2",
-        "output": "#f8f8f2",
-        "highlighted": "bg:#44475a #f8f8f2",
-        "separator": "#6272a4",
-        "error": "#ff5555 bold",
-        "info": "#8be9fd",
+        "prompt": "bold #a68a0d",
+        "output": "#3993d4",
+        "enabled": "#5c962c",
+        "success": "#4fc414",
+        "disabled": "#ffffff",
+        "error": "#f0524f bold",
     }
 )
 session = PromptSession(style=style)
+
+bindings = KeyBindings()
+
+cwd = os.getcwd()
+env_path = cwd + "/" + ".env"
+log_path = cwd + "/" + "log_config.yml"
+
+
+def output_colored_text(text, style_class, line_break=True):
+    end = ""
+    if line_break:
+        end = "\n"
+    print_formatted_text(HTML(f"<{style_class}>{text}</{style_class}>"), end=end, style=style)
+
+
+@bindings.add("c-c")
+def _(event):
+    event.app.exit()
 
 
 # command cli
@@ -45,40 +57,23 @@ def main():
 
 
 @main.group()
-def cli():
+def run():
     pass
 
 
-@cli.command()
-@click.option(
-    "-e",
-    "--env",
-    type=str,
-    required=False,
-    default="",
-    help="环境变量文件路径, 如果没有则默认使用当前运行的环境变量",
-)
-def run(env: str):
+@run.command()
+def cli():
     context = DataAgent().run()
     while True:
         user_input = session.prompt("输入你的问题:")
         if user_input.lower() == "exit":
             break
-        params = {
-            "question": user_input,
-            "datasource_id": "str",
-            "database": "str",
-            "knowledge": "str",
-            "session_id": "str",
-            "file_name": "str",
-            "file_id": "str",
-        }
+        params = {"question": "查询任务列表"}
         pipeline = context.plan(DataAgentPlannerParams(**params))
 
         async def execute():
             async for item in pipeline.execute():
-                session.output.write(item)
-                session.output.flush()
+                output_colored_text(item, "output", False)
             session.output.write("\n")
             session.output.flush()
 
@@ -86,12 +81,7 @@ def run(env: str):
 
 
 # command server
-@main.group()
-def server():
-    pass
-
-
-@server.command()
+@run.command()
 @click.option(
     "-p",
     "--port",
@@ -99,15 +89,7 @@ def server():
     required=True,
     help="服务端口号",
 )
-@click.option(
-    "-e",
-    "--env",
-    type=str,
-    required=False,
-    default="",
-    help="环境变量文件路径, 如果没有则默认使用当前运行的环境变量",
-)
-def start(port: int, env: str):
+def server(port: int):
     data_agent_server = DataAgentServer(port=port)
     data_agent_server.run_server()
     pass
@@ -172,8 +154,7 @@ def datasource():
 def add(name: str, host: str, port: int, database: str, kind: str, username: str, password: str):
     kind = Kind.getKind(kind)
     if kind is None:
-        session.output.write("不支持的数据源类型[{}], PS: 支持类型: [{}]".format(kind, Kind.MYSQL.value))
-        session.output.write("\n")
+        output_colored_text(f"不支持的数据源类型[{kind}], PS: 支持类型: [{Kind.MYSQL.value}]", "error")
         return
     context = DataAgent().run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
@@ -211,11 +192,12 @@ def sync(name: str):
             mysql_conn = MysqlConnector(item, context)
             mysql_conn.query_schema()
     else:
-        raise Exception("datasource is not exist")
+        output_colored_text(f"执行失败, [{name}]数据源不存在", "error")
 
 
 @datasource.command(help="查询当前已添加的数据源")
 def ls():
+    DataAgentEnv(env_path)
     context = DataAgent().run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
@@ -224,23 +206,18 @@ def ls():
     session.output.write("存在" + str(len(datasource_list)) + "个数据源")
     session.output.write("\n")
     for item in datasource_list:
-        session.output.write("========================")
-        session.output.write("\n")
-        session.output.write("名称：" + item.name)
-        session.output.write("\n")
-        session.output.write("地址：" + item.host)
-        session.output.write("\n")
-        session.output.write("端口：" + str(item.port))
-        session.output.write("\n")
-        session.output.write("数据源类型：" + str(item.kind))
-        session.output.write("\n")
-        session.output.write("数据库：" + str(item.database))
-        session.output.write("\n")
-        session.output.write("当前已选中：" + str(item.enable))
-        session.output.write("\n")
-        session.output.write("========================")
-        session.output.write("\n")
-    session.output.flush()
+        if item.enable:
+            color = "enabled"
+        else:
+            color = "disabled"
+        output_colored_text("========================", color)
+        output_colored_text("名称：" + item.name, color)
+        output_colored_text("地址：" + item.host, color)
+        output_colored_text("端口：" + str(item.port), color)
+        output_colored_text("数据源类型：" + str(item.kind), color)
+        output_colored_text("数据库：" + str(item.database), color)
+        output_colored_text("当前已选中：" + str(item.enable), color)
+        output_colored_text("========================", color)
 
 
 @datasource.command(help="指定Agent使用的数据源")
@@ -258,12 +235,9 @@ def enable(name: str):
     )
     success = datasource_repository.enable(name)
     if success:
-        session.output.write("执行成功")
-        session.output.write("\n")
+        output_colored_text("执行成功", "success")
     else:
-        session.output.write("执行失败")
-        session.output.write("\n")
-    session.output.flush()
+        output_colored_text(f"执行失败, [{name}]数据源不存在", "error")
 
 
 @datasource.command(help="取消Agent使用的数据源")
@@ -281,12 +255,9 @@ def disable(name: str):
     )
     success = datasource_repository.disable(name)
     if success:
-        session.output.write("执行成功")
-        session.output.write("\n")
+        output_colored_text("执行成功", "success")
     else:
-        session.output.write("执行失败")
-        session.output.write("\n")
-    session.output.flush()
+        output_colored_text(f"执行失败, [{name}]数据源不存在", "error")
 
 
 @datasource.command(help="删除已存在的数据源")
@@ -300,13 +271,12 @@ def disable(name: str):
 def delete(name: str):
     context = DataAgent().run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE)
-    datasource_repository.delete(name)
+    count = datasource_repository.delete(name)
+    if count == 0:
+        output_colored_text("删除成功", "success")
+    else:
+        output_colored_text(f"删除失败，[{name}]数据源不存在", "error")
 
-
-current_directory = os.getcwd()
-config_path_dir = os.path.dirname(current_directory)
-env_path = config_path_dir + "/" + ".env"
-log_path = config_path_dir + "/" + "log_config.yml"
 
 if __name__ == "__main__":
     DataAgentEnv(env_path)

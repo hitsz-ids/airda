@@ -8,10 +8,3 @@ from data_agent.framework.agent.module.planner.planner_params import PlannerPara
 
 class DataAgentPlannerParams(BaseModel, PlannerParams, PipelineParams):
     question: str
-    datasource_id: str
-    database: str
-    knowledge: str
-    session_id: str
-    sql_type: str = "mysql"
-    file_name: str
-    file_id: str

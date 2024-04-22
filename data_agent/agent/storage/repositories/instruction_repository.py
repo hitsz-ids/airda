@@ -64,6 +64,6 @@ class InstructionRepository(Repository):
         return self.storage.delete_by(DB_COLLECTION, query)
 
     def delete(self, datasource_id: str, database: str):
-        self.storage.delete_by(
+        return self.storage.delete_by(
             DB_COLLECTION, {"datasource_id": datasource_id, "database": database}
         )

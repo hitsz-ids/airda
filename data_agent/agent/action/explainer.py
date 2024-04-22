@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, Optional
 from overrides import overrides
 from pydantic import BaseModel
 
+from data_agent.agent import log
 from data_agent.agent.action.searcher import SearcherResult
 from data_agent.agent.action.sql_generator import SQLGeneratorResult
 from data_agent.framework.action.action_params import ActionParams
@@ -33,6 +34,8 @@ SQL_EXPLAIN_QUESTION = """
 {sql}
 """
 
+logger = log.getPromptLogger()
+
 
 class ExplainerParams(ActionParams, BaseModel):
     question: str
@@ -52,6 +55,7 @@ class Explainer(LLMAction[ExplainerParams, ExplainerResult]):
 
     @overrides
     async def execute(self, context: "Context") -> AsyncGenerator[ExplainerResult, None]:
+        logger.info(self.prompt)
         message = self.make_message()
         result = ExplainerResult(session_token="", token="")
         async for chunk in self.llm_api.chat_completion_stream(messages=[message]):

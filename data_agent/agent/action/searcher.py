@@ -1,10 +1,9 @@
-import logging
 from typing import TYPE_CHECKING, Optional
 
 from overrides import overrides
 from pydantic import BaseModel
 
-from data_agent.agent.storage.entity.instruction import Instruction
+from data_agent.agent import log
 from data_agent.agent.storage.repositories.instruction_repository import (
     InstructionRepository,
 )
@@ -15,17 +14,16 @@ from data_agent.framework.action.sync_action import SyncAction
 if TYPE_CHECKING:
     from data_agent.framework.agent.context import Context
 
-logger = logging.getLogger(__name__)
+logger = log.getLogger()
 
 
 class SearcherParams(BaseModel, ActionParams):
     question: str
-    datasource_id: str
-    database: str
 
 
 class SearcherResult(BaseModel, ActionResult):
     tables_schema: Optional[str] = None
+    kind: str
 
 
 class Searcher(SyncAction[SearcherParams, SearcherResult]):
@@ -77,39 +75,4 @@ class Searcher(SyncAction[SearcherParams, SearcherResult]):
             if instruction:
                 tables_schema += instruction.table_schema + "\n"
                 pass
-        return SearcherResult(tables_schema=tables_schema)
-
-    def _get_table_instruction(
-        self, table_names: list[str], datasource_id: str, database: str
-    ) -> list[Instruction]:
-        results = []
-        for table in table_names:
-            query = {
-                "table_name": table,
-                "datasource_id": datasource_id,
-                "database": database,
-            }
-            table_description = self.instruction_repository.find_one(query=query)
-
-            if not table_description:
-                continue
-            results.append(table_description)
-        return results
-
-    def _search_knowledge(self):
-        """
-        todo 需要调用rag服务的接口获取相关知识库的内容
-        """
-        return ""
-
-    def _search_tables(self):
-        """
-        todo 需要调用rag服务的接口获取到表信息
-        """
-        return []
-
-    def _search_golden_sql(self):
-        """
-        todo 需要调用rag服务的接口获取golden_sql
-        """
-        return ""
+        return SearcherResult(tables_schema=tables_schema, kind=datasource.kind)

@@ -11,12 +11,16 @@ handlers:
     formatter: default
   file:
     class: logging.handlers.RotatingFileHandler
-    filename: ../data_agent.log
+    filename: ./data_agent.log
     formatter: default
 loggers:
   root:
     level: INFO
     handlers: [ console ]
+  action_prompt:
+    level: INFO
+    propagate: false
+    handlers: [ file ]
   framework:
     level: INFO
     propagate: false

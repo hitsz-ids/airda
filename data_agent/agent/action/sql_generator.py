@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING, AsyncGenerator, Optional
 from overrides import overrides
 from pydantic import BaseModel
 
+from data_agent.agent import log
 from data_agent.agent.action.searcher import SearcherResult
 from data_agent.framework.action.action_params import ActionParams
 from data_agent.framework.action.action_result import ActionResult
@@ -41,12 +42,12 @@ FEW_SHOT_EXAMPLE = """
 {few_shot_example}
 """
 
+logger = log.getPromptLogger()
+
 
 class SQLGeneratorParams(BaseModel, ActionParams):
-    searcher_result: Optional[SearcherResult] = None
     question: str
-    sql_type: str
-    session_id: str
+    searcher_result: Optional[SearcherResult] = None
 
 
 class SQLGeneratorResult(BaseModel, ActionResult):
@@ -60,6 +61,7 @@ class SqlGenerator(LLMAction[SQLGeneratorParams, SQLGeneratorResult]):
 
     @overrides
     async def execute(self, context: "Context") -> AsyncGenerator[SQLGeneratorResult, None]:
+        logger.info(self.prompt)
         message = self.make_message()
         model_output = self.llm_api.chat_completion(messages=[message])
         result = SQLGeneratorResult()
@@ -74,7 +76,7 @@ class SqlGenerator(LLMAction[SQLGeneratorParams, SQLGeneratorResult]):
     @overrides
     def init_prompt(self) -> str:
         question = self.params.question
-        sql_type = self.params.sql_type
+        sql_type = self.params.searcher_result.kind
         table_schema = None
         knowledge = None
         few_shot_example = None

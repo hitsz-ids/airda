@@ -30,13 +30,6 @@ logger = logging.getLogger(__name__)
 
 class SqlAssistantParams(BaseModel, AssistantParams):
     question: str
-    datasource_id: str
-    database: str
-    knowledge: str
-    session_id: str
-    sql_type: str = "mysql"
-    file_name: str
-    file_id: str
 
 
 class SqlAssistant(Assistant[SqlAssistantParams]):
@@ -55,8 +48,6 @@ class SqlAssistant(Assistant[SqlAssistantParams]):
         elif cls == SqlGenerator:
             params = SQLGeneratorParams(
                 question=self.get_params.question,
-                sql_type=self.get_params.sql_type,
-                session_id=self.get_params.session_id,
             )
             SQLGeneratorStrategy().concat(params, previous)
             m_action = SqlGenerator(params, self.context.get_llm(DataAgentLLMKeys.SqlLLM))
