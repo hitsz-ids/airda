@@ -1,6 +1,7 @@
 # IDE cache
 .idea
 .vscode
+
 # mac cache
 .DS_Store
 
