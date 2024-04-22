@@ -24,12 +24,17 @@ CPU：8核 内存：32GB+
 
    pip install data-agent
 
-安装成功后，直接运行data-agent
+启动命令行运行
 
 .. code::
 
    data-agent run cli
 
+启动服务运行
+
+.. code::
+
+   data-agent run server -p 8080
 
 .. _header-n5:
 
@@ -63,6 +68,7 @@ CPU：8核 内存：32GB+
 
 
 4、创建\ ``log_config.yml``\ 文件，可以从\ ``log_config.yml.template``\ 文件复制
+
 .. code::
 
    cp log_config.yml.template .log_config.yml
@@ -88,40 +94,8 @@ CPU：8核 内存：32GB+
 6、启动
 
 .. code::
+
    #启动命令行模式
    python cli/startup run cli
    #启动服务模式
    python cli/startup run server -p 8080
-.. _header-n18:
-
-Docker部署
-----------
-
-1、构建镜像
-
-.. code::
-
-   bash docker/build.sh
-
-2、创建embedding模型存储目录
-
-.. code::
-
-   mkdir -p /data/huggingface
-
-3、启动容器
-
-.. code::
-
-   docker run -idt --privileged=true \
-   -p 8888:8888 \
-   -v /data/huggingface:/root/.cache/huggingface \
-   -e LLM_SQL_ORIGIN=http://xxx.xxx.xxx.xxx:8000 \ # 按实际情况替换
-   -e MONGODB_URI=mongodb://xxx.xxx.xxx.xxx:27017 \ # 按实际情况替换
-   -e MONGODB_DB_NAME=dataagent \
-   -e MONGODB_DB_USERNAME=xxx \ # 按实际情况替换
-   -e MONGODB_DB_PASSWORD=xxx \ # 按实际情况替换
-   -e EMBEDDINGS_MODEL_NAME=infgrad/stella-large-zh-v2 \
-   --restart always \
-   --name dataagent \
-   langcode/dataagent:Alpha

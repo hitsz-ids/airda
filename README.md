@@ -26,40 +26,29 @@ DataAgent的工作流程图
 [https://www.yuque.com/biehuitou/dasgwp/gxii4gkkvudskf4k?singleDoc#](https://www.yuque.com/biehuitou/dasgwp/gxii4gkkvudskf4k?singleDoc#) 《DataAgent部署》
 ### 模型部署
 [https://www.yuque.com/biehuitou/dasgwp/nhvzgnpyq7cmy590?singleDoc#](https://www.yuque.com/biehuitou/dasgwp/nhvzgnpyq7cmy590?singleDoc#) 《模型部署》
-### 对你的数据库进行提问
-1、训练你的数据库
+### 相关配置命令
+添加你的数据源
 ```
-curl -X 'POST' \
-'http://localhost/v1/instruction/sync' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"db_connection_id": "db_connection_id",
-"table_names": ["table_name"]
-}'
+data-agent datasource add
 ```
-2、训练你的知识库
+训练数据源的schema
 ```
-curl -X 'POST' \
-'http://localhost/v1/knowledge/train' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"file_id": "file_id",
-"file_name": "file_name",
-"file":File
-}'
+data-agent datasource sync
 ```
-3、通过自然语言查询数据
+启用要使用的数据源
 ```
-curl -X 'POST' \
-'http://localhost/v1/chat/completions' \
--H 'accept: application/json' \
--H 'Content-Type: application/json' \
--d '{
-"model": "sql_model",
-"messages": [{"role":"user","content":"自然语言问题"}],
+data-agent datasource enable
 ```
+禁用要使用的数据源
+```
+data-agent datasource disable
+```
+查询当前可用的数据源
+```
+data-agent datasource ls
+```
+
+
 ## 👏 贡献
 我们欢迎各种贡献和建议，共同努力，使本项目更上一层楼！麻烦遵循以下步骤：
 
