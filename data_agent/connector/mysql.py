@@ -41,7 +41,8 @@ class MysqlConnector:
 
         # 获取所有表名
         cursor.execute(
-            f"SELECT TABLE_NAME, TABLE_COMMENT FROM information_schema.tables WHERE table_schema = '{self.datasource.database}'"
+            f"SELECT TABLE_NAME, TABLE_COMMENT FROM information_schema.tables WHERE table_schema = "
+            f"'{self.datasource.database}'"
         )
         tables = cursor.fetchall()
         instruction_list = []
