@@ -36,5 +36,5 @@ jobs:
       if: startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
-        user: data-agent_api_token
-        password: ${{ secrets.PYPI_API_TOKEN }}
+        user: aida-test
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
