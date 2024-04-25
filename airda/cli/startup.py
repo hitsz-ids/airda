@@ -12,6 +12,7 @@ from prompt_toolkit.styles import Style
 from airda.agent import DataAgentKey
 from airda.agent.agent import DataAgent
 from airda.agent.env import DataAgentEnv
+from airda.agent.exception.already_exists_error import AlreadyExistsError
 from airda.agent.planner.data_agent_planner_params import DataAgentPlannerParams
 from airda.agent.storage import StorageKey
 from airda.agent.storage.entity.datasource import Datasource, Kind
@@ -174,17 +175,21 @@ def add(name: str, host: str, port: int, database: str, kind: str, username: str
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
     )
-    datasource_repository.add(
-        Datasource(
-            name=name,
-            host=host,
-            port=port,
-            database=database,
-            kind=kind,
-            username=username,
-            password=password,
+    try:
+        datasource_repository.add(
+            Datasource(
+                name=name,
+                host=host,
+                port=port,
+                database=database,
+                kind=kind,
+                username=username,
+                password=password,
+            )
         )
-    )
+        output_colored_text("执行成功", "success")
+    except AlreadyExistsError:
+        output_colored_text(f"执行失败, [{name}]数据源已存在", "error")
 
 
 @datasource.command(help="同步数据源的表字段信息并进行向量化")

@@ -1,6 +1,7 @@
 from typing import List
 
 from airda.agent import log
+from airda.agent.exception.already_exists_error import AlreadyExistsError
 from airda.agent.storage.entity.datasource import Datasource
 from airda.agent.storage.repositories.respository import Repository
 
@@ -13,7 +14,7 @@ class DatasourceRepository(Repository):
     def add(self, datasource: Datasource) -> Datasource:
         has = self.find_one(datasource.name)
         if has:
-            raise Exception("datasource already exists")
+            raise AlreadyExistsError()
         datasource_dict = datasource.dict(exclude={"id"})
         datasource.id = str(self.storage.insert_one(DB_COLLECTION, datasource_dict))
         return datasource
