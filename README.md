@@ -7,10 +7,10 @@ DataAgent是面向数据分析的多智能体，能够理解数据开发和数�
 - **多智能体协同工作**：DataAgent采用面向数据分析需求的多轮对话设计，多智能体可以协同工作，进行数据分析代码的self-debug，提升分析效率，降低错误率。
 - **数据可视化**：DataAgent可以将复杂的数据通过可视化的方式呈现，让数据分析结果更易于理解，帮助您更好地做出决策。
 ### DataAgent工作流程：
-**1. 需求确认：**DataAgent与用户建立对话，理解用户的需求。在这一阶段，DataAgent会提出一系列问题，以便更准确地了解用户的需求。
-**2. 任务规划：**DataAgent会根据最终确认的需求内容为用户制定任务规划。这个规划包括一系列步骤，DataAgent会按照这些步骤来为用户提供服务。
-**3. 任务执行：**DataAgent将规划好的任务分配给不同的智能体，如数据查找智能体、SQL生成智能体、代码生成智能体、可视化分析智能体等。每个智能体负责其专业领域的任务执行，协同工作以确保任务的高效完成。
-**4.应用生成：**DataAgent根据用户需求任务将结果数据转化为应用成果，如指标大屏展示、数据API服务和数据应用等，这些成果能够以可视化的形式展示关键数据指标，提供API接口供其他系统或服务调用，以及根据用户需求生成具体的应用程序。![image.png](https://cdn.nlark.com/yuque/0/2024/png/197719/1710300903035-88553d9f-c683-4495-b48a-21ac46ec9c15.png#averageHue=%23f8f8f7&clientId=u2097a547-b42e-4&from=paste&height=433&id=zTI5J&originHeight=866&originWidth=1880&originalType=binary&ratio=2&rotation=0&showTitle=false&size=365231&status=done&style=none&taskId=ua5950672-3b82-42fc-b39f-bcffdb77ff4&title=&width=940)
+- **需求确认：** DataAgent与用户建立对话，理解用户的需求。在这一阶段，DataAgent会提出一系列问题，以便更准确地了解用户的需求。
+- **任务规划：** DataAgent会根据最终确认的需求内容为用户制定任务规划。这个规划包括一系列步骤，DataAgent会按照这些步骤来为用户提供服务。
+- **任务执行：** DataAgent将规划好的任务分配给不同的智能体，如数据查找智能体、SQL生成智能体、代码生成智能体、可视化分析智能体等。每个智能体负责其专业领域的任务执行，协同工作以确保任务的高效完成。
+- **应用生成：** DataAgent根据用户需求任务将结果数据转化为应用成果，如指标大屏展示、数据API服务和数据应用等，这些成果能够以可视化的形式展示关键数据指标，提供API接口供其他系统或服务调用，以及根据用户需求生成具体的应用程序。![image.png](https://cdn.nlark.com/yuque/0/2024/png/197719/1710300903035-88553d9f-c683-4495-b48a-21ac46ec9c15.png#averageHue=%23f8f8f7&clientId=u2097a547-b42e-4&from=paste&height=433&id=zTI5J&originHeight=866&originWidth=1880&originalType=binary&ratio=2&rotation=0&showTitle=false&size=365231&status=done&style=none&taskId=ua5950672-3b82-42fc-b39f-bcffdb77ff4&title=&width=940)
 DataAgent的工作流程图
 ### 完成进度：
 
