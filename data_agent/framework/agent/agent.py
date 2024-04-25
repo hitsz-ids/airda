@@ -7,7 +7,6 @@ from data_agent.framework.agent.module.assistant_manager.assistant_manager impor
 )
 from data_agent.framework.agent.module.llm_manager.llm_manager import LLMManager
 from data_agent.framework.agent.module.planner.planner import Planner
-from data_agent.framework.setting.env_manager import Env
 
 C = TypeVar("C", bound=Context)
 

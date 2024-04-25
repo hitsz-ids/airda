@@ -8,6 +8,7 @@ from prompt_toolkit import HTML, PromptSession, print_formatted_text
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
+from data_agent.agent import DataAgentKey
 from data_agent.agent.agent import DataAgent
 from data_agent.agent.env import DataAgentEnv
 from data_agent.agent.planner.data_agent_planner_params import DataAgentPlannerParams
@@ -36,6 +37,13 @@ bindings = KeyBindings()
 cwd = os.getcwd()
 env_path = cwd + "/" + ".env"
 log_path = cwd + "/" + "log_config.yml"
+DataAgentEnv(env_path)
+try:
+    with open(log_path, "r") as f:
+        config = yaml.safe_load(f)
+        logging.config.dictConfig(config)
+except FileNotFoundError:
+    pass
 
 
 def output_colored_text(text, style_class, line_break=True):
@@ -73,7 +81,10 @@ def cli():
 
         async def execute():
             async for item in pipeline.execute():
-                output_colored_text(item, "output", False)
+                if item == "[DONE]":
+                    output_colored_text("", "output", False)
+                else:
+                    output_colored_text(item, "output", False)
             session.output.write("\n")
             session.output.flush()
 
@@ -156,7 +167,7 @@ def add(name: str, host: str, port: int, database: str, kind: str, username: str
     if kind is None:
         output_colored_text(f"不支持的数据源类型[{kind}], PS: 支持类型: [{Kind.MYSQL.value}]", "error")
         return
-    context = DataAgent().run()
+    context = DataAgent(DataAgentKey.STORAGE).run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
     )
@@ -197,8 +208,7 @@ def sync(name: str):
 
 @datasource.command(help="查询当前已添加的数据源")
 def ls():
-    DataAgentEnv(env_path)
-    context = DataAgent().run()
+    context = DataAgent(DataAgentKey.STORAGE).run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
     )
@@ -229,7 +239,7 @@ def ls():
     help="数据源名称",
 )
 def enable(name: str):
-    context = DataAgent().run()
+    context = DataAgent(DataAgentKey.STORAGE).run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
     )
@@ -249,7 +259,7 @@ def enable(name: str):
     help="数据源名称",
 )
 def disable(name: str):
-    context = DataAgent().run()
+    context = DataAgent(DataAgentKey.STORAGE).run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
         DatasourceRepository
     )
@@ -269,7 +279,7 @@ def disable(name: str):
     help="数据源名称",
 )
 def delete(name: str):
-    context = DataAgent().run()
+    context = DataAgent(DataAgentKey.STORAGE).run()
     datasource_repository = context.get_repository(StorageKey.DATASOURCE)
     count = datasource_repository.delete(name)
     if count == 0:
@@ -279,8 +289,4 @@ def delete(name: str):
 
 
 if __name__ == "__main__":
-    DataAgentEnv(env_path)
-    with open(log_path, "r") as f:
-        config = yaml.safe_load(f)
-        logging.config.dictConfig(config)
     main()
