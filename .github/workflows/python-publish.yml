@@ -25,7 +25,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v3
       with:
-        python-version: '3.x'
+        python-version: '3.10.13'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -33,8 +33,8 @@ jobs:
     - name: Build package
       run: python -m build
     - name: Publish package
-      if: startsWith(github.ref, 'refs/tags')
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
-        user: data-agent_api_token
+        if: startsWith(github.ref, 'refs/tags')
+        user: airda-token
         password: ${{ secrets.PYPI_API_TOKEN }}
