@@ -33,16 +33,18 @@ style = Style.from_dict(
 session = PromptSession(style=style)
 
 bindings = KeyBindings()
-
-cwd = os.getcwd()
-env_path = cwd + "/" + ".env"
-log_path = cwd + "/" + "log_config.yml"
+user_path = "~/.airda"
+config_path = os.path.expanduser(user_path)
+os.makedirs(config_path, exist_ok=True)
+env_path = config_path + "/" + ".env"
+log_path = config_path + "/" + "log_config.yml"
 DataAgentEnv(env_path)
 try:
     with open(log_path, "r") as f:
         config = yaml.safe_load(f)
         logging.config.dictConfig(config)
-except FileNotFoundError:
+except Exception as e:
+    print(e)
     pass
 
 
@@ -138,7 +140,7 @@ def datasource():
     "-k",
     "--kind",
     type=str,
-    required=False,
+    required=True,
     help="数据源种类目前只支持: [{}]".format(Kind.MYSQL.name),
 )
 @click.option(
@@ -286,6 +288,39 @@ def delete(name: str):
         output_colored_text("删除成功", "success")
     else:
         output_colored_text(f"删除失败，[{name}]数据源不存在", "error")
+
+
+@main.group()
+def load():
+    pass
+
+
+@load.command()
+@click.option(
+    "-p",
+    "--path",
+    type=str,
+    required=True,
+    help=".env文件路径",
+)
+def env(path: str):
+    import shutil
+    if os.path.exists(path):
+        shutil.copy(path, env_path)
+
+
+@load.command()
+@click.option(
+    "-p",
+    "--path",
+    type=str,
+    required=True,
+    help="log_config.yml文件路径",
+)
+def log(path: str):
+    import shutil
+    if os.path.exists(path):
+        shutil.copy(path, log_path)
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@ description = "airda"
 authors = ["hitsz-ids"]
 include = [".env"]
 readme = ["README.md"]
+exclude = ["*.log", "log_config.yml", "*.template", "*.lock"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -35,6 +36,8 @@ fastapi = "0.99.0"
 [tool.poetry.scripts]
 airda = "airda.cli.startup:main"
 
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+

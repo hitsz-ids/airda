@@ -19,7 +19,7 @@ poetry.lock
 dist/
 
 # config
-data_agent.log
+airda_log.log
 log_config.yml
 
 # poetry

@@ -11,7 +11,7 @@ handlers:
     formatter: default
   file:
     class: logging.handlers.RotatingFileHandler
-    filename: ./data_agent.log
+    filename: ./airda_log.log
     formatter: default
 loggers:
   root:
