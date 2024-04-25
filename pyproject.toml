@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "data-agent"
+name = " datagent"
 version = "0.0.1"
-description = "data-agent"
-authors = ["langcode"]
+description = " datagent"
+authors = ["hitsz-ids"]
 include = [".env"]
 readme = ["README.md"]
 
