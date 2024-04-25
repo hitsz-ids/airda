@@ -3,7 +3,7 @@ name: Pre-commit Check
 on:
   push:
     paths:
-      - 'sql_agent/**' # 检测sql_agent 目录下所有文件
+      - 'data_agent/**' # 检测sql_agent 目录下所有文件
 
 jobs:
   pre-commit-check:
