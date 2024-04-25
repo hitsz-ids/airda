@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "aida"
+name = "airda"
 version = "0.0.1"
-description = " aida"
+description = "airda"
 authors = ["hitsz-ids"]
 include = [".env"]
 readme = ["README.md"]
@@ -33,7 +33,7 @@ mysql-connector-python = "^8.3.0"
 fastapi = "0.99.0"
 
 [tool.poetry.scripts]
-aida = "aida.cli.startup:main"
+airda = "airda.cli.startup:main"
 
 [build-system]
 requires = ["poetry-core"]

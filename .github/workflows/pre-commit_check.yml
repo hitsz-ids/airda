@@ -3,7 +3,7 @@ name: Pre-commit Check
 on:
   push:
     paths:
-      - 'aida/**' # 检测data_agent 目录下所有文件
+      - 'airda/**' # 检测data_agent 目录下所有文件
 
 jobs:
   pre-commit-check:
