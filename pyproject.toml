@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "data-agent"
-version = "0.1.0"
+version = "0.0.1"
 description = "data-agent"
 authors = ["langcode"]
 include = [".env"]
