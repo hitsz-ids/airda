@@ -43,8 +43,7 @@ try:
     with open(log_path, "r") as f:
         config = yaml.safe_load(f)
         logging.config.dictConfig(config)
-except Exception as e:
-    print(e)
+except Exception:
     pass
 
 
