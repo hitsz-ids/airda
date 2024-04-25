@@ -11,7 +11,7 @@ class DataAgentProcessPool:
 
     def __init__(self):
         self.pool_executor = concurrent.futures.ProcessPoolExecutor(
-            max_workers=int(DataAgentEnv().max_works)
+            max_workers=int(DataAgentEnv().MAX_WORKS)
         )
 
     def submit(self, fn, /, *args, **kwargs):

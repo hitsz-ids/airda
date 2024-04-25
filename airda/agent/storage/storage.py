@@ -31,10 +31,10 @@ class DataAgentStorage(Loader):
         super().load(StorageKey.DATASOURCE, DatasourceRepository)
 
     def init_storage(self):
-        uri = DataAgentEnv().mongodb_uri
-        db_name = DataAgentEnv().mongodb_db_name
-        username = DataAgentEnv().mongodb_username
-        password = DataAgentEnv().mongodb_password
+        uri = DataAgentEnv().MONGODB_URI
+        db_name = DataAgentEnv().MONGODB_DB_NAME
+        username = DataAgentEnv().MONGODB_USERNAME
+        password = DataAgentEnv().MONGODB_PASSWORD
         if username and password:
             self.client = MongoClient(uri, username=username, password=password)
             self.database = self.client[db_name]

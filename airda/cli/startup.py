@@ -5,6 +5,7 @@ import os
 import click
 import yaml
 from prompt_toolkit import HTML, PromptSession, print_formatted_text
+from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 
@@ -39,10 +40,11 @@ os.makedirs(config_path, exist_ok=True)
 env_path = config_path + "/" + ".env"
 log_path = config_path + "/" + "log_config.yml"
 DataAgentEnv(env_path)
+log_config = {}
 try:
     with open(log_path, "r") as f:
-        config = yaml.safe_load(f)
-        logging.config.dictConfig(config)
+        log_config = yaml.safe_load(f)
+        logging.config.dictConfig(log_config)
 except Exception:
     pass
 
@@ -290,11 +292,11 @@ def delete(name: str):
 
 
 @main.group()
-def load():
+def env():
     pass
 
 
-@load.command()
+@env.command()
 @click.option(
     "-p",
     "--path",
@@ -302,13 +304,24 @@ def load():
     required=True,
     help=".env文件路径",
 )
-def env(path: str):
+def load(path: str):
     import shutil
     if os.path.exists(path):
         shutil.copy(path, env_path)
 
 
-@load.command()
+@env.command()
+def ls():
+    import json
+    print_formatted_text(FormattedText([('class:json', json.dumps(DataAgentEnv().__dict__, indent=4))]))
+
+
+@main.group()
+def log():
+    pass
+
+
+@log.command()
 @click.option(
     "-p",
     "--path",
@@ -316,10 +329,16 @@ def env(path: str):
     required=True,
     help="log_config.yml文件路径",
 )
-def log(path: str):
+def load(path: str):
     import shutil
     if os.path.exists(path):
         shutil.copy(path, log_path)
+
+
+@log.command()
+def ls():
+    import json
+    print_formatted_text(FormattedText([('class:json', json.dumps(log_config, indent=4))]))
 
 
 if __name__ == "__main__":
