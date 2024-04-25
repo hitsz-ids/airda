@@ -33,7 +33,7 @@ mysql-connector-python = "^8.3.0"
 fastapi = "0.99.0"
 
 [tool.poetry.scripts]
-data-agent = "data_agent.cli.startup:start"
+data-agent = "data_agent.cli.startup:main"
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,6 +1,6 @@
 from overrides import overrides
 
-from data_agent.agent import log
+from data_agent.agent import DataAgentKey, log
 from data_agent.agent.assistants.assistant_manager import DataAgentAssistantManager
 from data_agent.agent.data_agent_context import DataAgentContext
 from data_agent.agent.llm.data_agent_llm_manager import DataAgentLLMManager
@@ -16,10 +16,17 @@ logger = log.getLogger()
 
 
 class DataAgent(Agent[DataAgentContext]):
-    def __init__(self):
+    def __init__(self, *args) -> None:
         super().__init__()
-        self.context.load_rag()
-        self.context.load_storage()
+        if len(args) == 0:
+            self.context.load_rag()
+            self.context.load_storage()
+        else:
+            for item in args:
+                if item == DataAgentKey.STORAGE:
+                    self.context.load_storage()
+                if item == DataAgentKey.RAG:
+                    self.context.load_rag()
 
     def init_context(self) -> DataAgentContext:
         return DataAgentContext()

@@ -7,7 +7,10 @@ from dotenv import load_dotenv
 
 class Env(ABC):
     def __init__(self, path: str | None):
-        load_dotenv(dotenv_path=path)
+        if os.path.exists(path):
+            load_dotenv(dotenv_path=path)
+        else:
+            load_dotenv()
         self.init()
         pass
 
