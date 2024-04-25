@@ -9,10 +9,10 @@ from airda.framework.agent.module.rag.embedding.embedding_model import (
 
 class DataAgentEmbeddingModel(EmbeddingModel):
     def init_tokenizer(self):
-        return DataAgentEnv().get("embeddings_model_name")
+        return DataAgentEnv().EMBEDDINGS_MODEL_NAME
 
     def init_model(self) -> str:
-        return DataAgentEnv().get("embeddings_model_name")
+        return DataAgentEnv().EMBEDDINGS_MODEL_NAME
 
     def embed_query(self, text) -> np.ndarray:
         if isinstance(text, str):

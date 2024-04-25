@@ -24,7 +24,7 @@ class DataAgentServer(WebFrameworkServer):
         import uvicorn
 
         uvicorn.run(
-            self.app, host=self.host, port=self.port, log_level=DataAgentEnv().get("log_level")
+            self.app, host=self.host, port=self.port, log_level="info"
         )
 
     @overrides

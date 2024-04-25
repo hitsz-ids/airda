@@ -24,7 +24,7 @@ class LLMManager(Loader, ABC):
     def get_llm(self, key: Keys) -> LLM:
         llm_type = super().get_lazy(key, LLM)
         if llm_type == OpenAILLM:
-            llm = OpenAILLM(key=DataAgentEnv().get("openai_api_key"))
+            llm = OpenAILLM(key=DataAgentEnv().OPENAI_API_KEY)
         else:
             llm = llm_type()
         return llm
