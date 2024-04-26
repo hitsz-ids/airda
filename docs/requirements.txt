@@ -1,6 +1,0 @@
-Sphinx
-sphinxemoji
-sphinx-copybutton
-sphinx-contributors
-git+https://github.com/SuperKogito/sphinxcontrib-pdfembed
-furo

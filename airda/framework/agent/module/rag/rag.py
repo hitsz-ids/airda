@@ -3,12 +3,8 @@ from abc import ABC, abstractmethod
 from airda.framework.agent.context import Context
 from airda.framework.agent.module.loader import Loader
 from airda.framework.agent.module.rag import RagKey
-from airda.framework.agent.module.rag.embedding.embedding_model import (
-    EmbeddingModel,
-)
-from airda.framework.agent.module.rag.schema_linking.schema_linking import (
-    SchemaLinking,
-)
+from airda.framework.agent.module.rag.embedding.embedding_model import EmbeddingModel
+from airda.framework.agent.module.rag.schema_linking.schema_linking import SchemaLinking
 
 
 class Rag(Loader, ABC):

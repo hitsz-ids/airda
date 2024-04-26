@@ -2,9 +2,7 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 from airda.agent.env import DataAgentEnv
-from airda.framework.agent.module.rag.embedding.embedding_model import (
-    EmbeddingModel,
-)
+from airda.framework.agent.module.rag.embedding.embedding_model import EmbeddingModel
 
 
 class DataAgentEmbeddingModel(EmbeddingModel):

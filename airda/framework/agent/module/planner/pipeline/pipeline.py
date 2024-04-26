@@ -2,9 +2,7 @@ from abc import abstractmethod
 from typing import AsyncGenerator, Generic, List, TypeVar
 
 from airda.framework.agent.context import Context
-from airda.framework.agent.module.assistant_manager.assistant.assistant import (
-    Assistant,
-)
+from airda.framework.agent.module.assistant_manager.assistant.assistant import Assistant
 
 from .pipeline_params import PipelineParams
 from .pipline_result import PipelineResult

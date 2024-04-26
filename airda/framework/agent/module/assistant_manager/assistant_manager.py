@@ -1,9 +1,7 @@
 from abc import abstractmethod
 
 from airda.framework.agent.context import Context
-from airda.framework.agent.module.assistant_manager.assistant.assistant import (
-    Assistant,
-)
+from airda.framework.agent.module.assistant_manager.assistant.assistant import Assistant
 from airda.framework.agent.module.loader import Loader
 from airda.framework.module.keys import Keys
 

@@ -1,12 +1,8 @@
 import numpy as np
 
 from airda.agent import log
-from airda.framework.agent.module.rag.embedding.embedding_model import (
-    EmbeddingModel,
-)
-from airda.framework.agent.module.rag.schema_linking.schema_linking import (
-    SchemaLinking,
-)
+from airda.framework.agent.module.rag.embedding.embedding_model import EmbeddingModel
+from airda.framework.agent.module.rag.schema_linking.schema_linking import SchemaLinking
 
 logger = log.getLogger()
 

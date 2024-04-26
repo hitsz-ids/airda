@@ -16,9 +16,7 @@ from airda.agent.exception.already_exists_error import AlreadyExistsError
 from airda.agent.planner.data_agent_planner_params import DataAgentPlannerParams
 from airda.agent.storage import StorageKey
 from airda.agent.storage.entity.datasource import Datasource, Kind
-from airda.agent.storage.repositories.datasource_repository import (
-    DatasourceRepository,
-)
+from airda.agent.storage.repositories.datasource_repository import DatasourceRepository
 from airda.connector.mysql import MysqlConnector
 from airda.server.agent_server import DataAgentServer
 
@@ -28,7 +26,6 @@ style = Style.from_dict(
         "output": "#3993d4",
         "enabled": "#5c962c",
         "success": "#4fc414",
-        "disabled": "#ffffff",
         "error": "#f0524f bold",
     }
 )
@@ -311,6 +308,7 @@ def env():
 )
 def load(path: str):
     import shutil
+
     if os.path.exists(path):
         shutil.copy(path, env_path)
 
@@ -318,7 +316,10 @@ def load(path: str):
 @env.command()
 def ls():
     import json
-    print_formatted_text(FormattedText([('class:json', json.dumps(DataAgentEnv().__dict__, indent=4))]))
+
+    print_formatted_text(
+        FormattedText([("class:json", json.dumps(DataAgentEnv().__dict__, indent=4))])
+    )
 
 
 @main.group()
@@ -336,6 +337,7 @@ def log():
 )
 def load(path: str):
     import shutil
+
     if os.path.exists(path):
         shutil.copy(path, log_path)
 
@@ -343,7 +345,8 @@ def load(path: str):
 @log.command()
 def ls():
     import json
-    print_formatted_text(FormattedText([('class:json', json.dumps(log_config, indent=4))]))
+
+    print_formatted_text(FormattedText([("class:json", json.dumps(log_config, indent=4))]))
 
 
 if __name__ == "__main__":

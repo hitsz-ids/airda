@@ -7,9 +7,7 @@ from pymongo.database import Database
 
 from airda.agent.env import DataAgentEnv
 from airda.agent.storage import StorageKey
-from airda.agent.storage.repositories.datasource_repository import (
-    DatasourceRepository,
-)
+from airda.agent.storage.repositories.datasource_repository import DatasourceRepository
 from airda.agent.storage.repositories.instruction_repository import (
     InstructionRepository,
 )

@@ -7,9 +7,7 @@ from airda.agent.assistants.sql_assistant.sql_assistant import (
 )
 from airda.agent.planner.data_agent_planner_params import DataAgentPlannerParams
 from airda.framework.agent.context import Context
-from airda.framework.agent.module.assistant_manager.assistant.assistant import (
-    Assistant,
-)
+from airda.framework.agent.module.assistant_manager.assistant.assistant import Assistant
 from airda.framework.agent.module.planner.pipeline.pipeline import Pipeline
 
 
