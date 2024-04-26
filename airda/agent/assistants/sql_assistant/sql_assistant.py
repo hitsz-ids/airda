@@ -15,9 +15,7 @@ from airda.agent.assistants.sql_assistant.sql_strategy import (
 from airda.agent.exception.action_type_error import ActionTypeError
 from airda.agent.llm.data_agent_llm_keys import DataAgentLLMKeys
 from airda.framework.action.action import Action
-from airda.framework.agent.module.assistant_manager.assistant.assistant import (
-    Assistant,
-)
+from airda.framework.agent.module.assistant_manager.assistant.assistant import Assistant
 from airda.framework.agent.module.assistant_manager.assistant.assistant_params import (
     AssistantParams,
 )

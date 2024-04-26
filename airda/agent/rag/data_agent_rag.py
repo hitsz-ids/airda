@@ -2,9 +2,7 @@ import heapq
 
 from airda.agent import log
 from airda.agent.process_pool.DataAgentProcessPool import DataAgentProcessPool
-from airda.agent.rag.embedding.data_agent_embedding_model import (
-    DataAgentEmbeddingModel,
-)
+from airda.agent.rag.embedding.data_agent_embedding_model import DataAgentEmbeddingModel
 from airda.agent.rag.schema_linking.data_agent_schema_linking import (
     DataAgentSchemaLinking,
 )

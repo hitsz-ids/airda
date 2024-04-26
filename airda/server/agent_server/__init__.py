@@ -23,9 +23,7 @@ class DataAgentServer(WebFrameworkServer):
     def run_server(self):
         import uvicorn
 
-        uvicorn.run(
-            self.app, host=self.host, port=self.port, log_level="info"
-        )
+        uvicorn.run(self.app, host=self.host, port=self.port, log_level="info")
 
     @overrides
     def add_routes(self):

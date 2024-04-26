@@ -1,9 +1,7 @@
 from abc import abstractmethod
 
 from airda.framework import log
-from airda.framework.agent.module.rag.embedding.embedding_model import (
-    EmbeddingModel,
-)
+from airda.framework.agent.module.rag.embedding.embedding_model import EmbeddingModel
 from airda.framework.module.immediate import Immediate
 
 logger = log.getLogger()
