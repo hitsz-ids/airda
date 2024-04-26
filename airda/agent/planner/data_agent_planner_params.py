@@ -6,3 +6,4 @@ from airda.framework.agent.module.planner.planner_params import PlannerParams
 
 class DataAgentPlannerParams(BaseModel, PlannerParams, PipelineParams):
     question: str
+    datasource_name: str

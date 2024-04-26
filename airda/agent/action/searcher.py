@@ -19,6 +19,7 @@ logger = log.getLogger()
 
 class SearcherParams(BaseModel, ActionParams):
     question: str
+    datasource_name: str
 
 
 class SearcherResult(BaseModel, ActionResult):
@@ -48,11 +49,11 @@ class Searcher(SyncAction[SearcherParams, SearcherResult]):
         datasource_repository = data_agent_context.get_repository(StorageKey.DATASOURCE).convert(
             DatasourceRepository
         )
-        datasource = datasource_repository.find_enable()
+        datasource = datasource_repository.find_one(self.params.datasource_name)
         if datasource is None:
             logger.debug("No datasource found")
             return SearcherResult(
-                knowledge="", tables_description="", tables_schema="", few_shot_example=""
+                knowledge="", tables_description="", tables_schema="", few_shot_example="", kind=""
             )
         limit_score_result, top_k_result = data_agent_context.get_rag().search(
             self.params.question, datasource.id, datasource.database

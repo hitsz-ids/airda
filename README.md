@@ -22,34 +22,82 @@ airda(Air Data Agent)是面向数据分析的多智能体，能够理解数据�
 - [ ] 任务规划
 
 ## ✨ 快速开始
-### airda部署
-[https://www.yuque.com/biehuitou/dasgwp/gxii4gkkvudskf4k?singleDoc#](https://www.yuque.com/biehuitou/dasgwp/gxii4gkkvudskf4k?singleDoc#) 《airda部署》
-### 模型部署
-[https://www.yuque.com/biehuitou/dasgwp/nhvzgnpyq7cmy590?singleDoc#](https://www.yuque.com/biehuitou/dasgwp/nhvzgnpyq7cmy590?singleDoc#) 《模型部署》
+
+### 环境要求
+
+Python>=3.10
+
+### 安装 airda
+
+pip安装
+
+```
+pip install airda -i https://pypi.python.org/simple/
+```
+
+### 依赖安装
+
+使用airda需要用到mongodb,可采用docker安装mongodb
+
+```
+#拉取mongo镜像
+docker pull mongo
+docker run -itd --name mongo -v /{path_of_mongo_data}:/data/db -p 27017:27017 mongo
+
+```
+
+### 自定义配置
+
+环境变量
+
+下载https://github.com/hitsz-ids/airda/blob/main/.env.template文件,自定义embedding模型,mongo配置,以及openai配置
+
+```
+airda env load -p {your_path}/.env_template
+```
+
+日志文件（非必须）
+
+下载https://github.com/hitsz-ids/airda/blob/main/log_config.yml.template文件,自定义日志配置
+
+```
+airda log load -p {your_path}/log_config.yml.template
+```
+
+
+
 ### 相关配置命令
+
 添加你的数据源
 ```
-airda datasource add
+airda datasource add -n {datasource_name} -h {host} -p {port} -k MYSQL -d {database} -u {username} -w {password}
+#当前只支持kind为MYSQL的数据源
 ```
 训练数据源的schema
+
 ```
-airda datasource sync
-```
-启用要使用的数据源
-```
-airda datasource enable
-```
-禁用要使用的数据源
-```
-airda datasource disable
+airda datasource sync -n {datasource_name}
 ```
 查询当前可用的数据源
 ```
 airda datasource ls
 ```
 
+### 开始问答
+
+```
+airda run cli -n {datasource_name}
+#输入你的问题:
+```
+
+
+
+
+
+
 
 ## 👏 贡献
+
 我们欢迎各种贡献和建议，共同努力，使本项目更上一层楼！麻烦遵循以下步骤：
 
 - **步骤1：** 如果您想添加任何额外的功能、增强功能或在使用过程中遇到任何问题，请发布一个 [问题](https://github.com/hitsz-ids/SQLAgent/issues) 。如果您能遵循 [问题模板](https://github.com/hitsz-ids/SQLAgent/issues/1) 我们将不胜感激。问题将在那里被讨论和分配。

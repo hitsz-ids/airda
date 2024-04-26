@@ -25,7 +25,7 @@ loggers:
     level: INFO
     propagate: false
     handlers: [ console ]
-  data_agent:
+  airda:
     level: INFO
     propagate: false
     handlers: [ console ]
