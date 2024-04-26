@@ -105,5 +105,4 @@ airda run cli -n {datasource_name}
 - **步骤3：** 在审查和讨论后，PR将被合并或迭代。感谢您的贡献！
 
 在您开始之前，我们强烈建议您花一点时间检查 [这里](https://github.com/hitsz-ids/SQLAgent/blob/developing/CONTRIBUTING.md) 再进行贡献。
-## 📖 文档
-请在[这里](https://dataagent.readthedocs.io/zh/latest/index.html#)查看完整文档，将随着demo更改和代码发布更新。
+
