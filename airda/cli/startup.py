@@ -71,13 +71,20 @@ def run():
 
 
 @run.command()
-def cli():
+@click.option(
+    "-n",
+    "--name",
+    type=str,
+    required=True,
+    help="数据源名称",
+)
+def cli(name: str):
     context = DataAgent().run()
     while True:
         user_input = session.prompt("输入你的问题:")
         if user_input.lower() == "exit":
             break
-        params = {"question": "查询任务列表"}
+        params = {"question": user_input, "datasource_name": name}
         pipeline = context.plan(DataAgentPlannerParams(**params))
 
         async def execute():
@@ -233,46 +240,6 @@ def ls():
         output_colored_text("数据库：" + str(item.database), color)
         output_colored_text("当前已选中：" + str(item.enable), color)
         output_colored_text("========================", color)
-
-
-@datasource.command(help="指定Agent使用的数据源")
-@click.option(
-    "-n",
-    "--name",
-    type=str,
-    required=True,
-    help="数据源名称",
-)
-def enable(name: str):
-    context = DataAgent(DataAgentKey.STORAGE).run()
-    datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
-        DatasourceRepository
-    )
-    success = datasource_repository.enable(name)
-    if success:
-        output_colored_text("执行成功", "success")
-    else:
-        output_colored_text(f"执行失败, [{name}]数据源不存在", "error")
-
-
-@datasource.command(help="取消Agent使用的数据源")
-@click.option(
-    "-n",
-    "--name",
-    type=str,
-    required=True,
-    help="数据源名称",
-)
-def disable(name: str):
-    context = DataAgent(DataAgentKey.STORAGE).run()
-    datasource_repository = context.get_repository(StorageKey.DATASOURCE).convert(
-        DatasourceRepository
-    )
-    success = datasource_repository.disable(name)
-    if success:
-        output_colored_text("执行成功", "success")
-    else:
-        output_colored_text(f"执行失败, [{name}]数据源不存在", "error")
 
 
 @datasource.command(help="删除已存在的数据源")

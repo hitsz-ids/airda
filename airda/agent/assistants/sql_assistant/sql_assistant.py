@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class SqlAssistantParams(BaseModel, AssistantParams):
     question: str
+    datasource_name: str
 
 
 class SqlAssistant(Assistant[SqlAssistantParams]):
