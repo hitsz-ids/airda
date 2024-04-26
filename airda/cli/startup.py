@@ -24,7 +24,6 @@ style = Style.from_dict(
     {
         "prompt": "bold #a68a0d",
         "output": "#3993d4",
-        "enabled": "#5c962c",
         "success": "#4fc414",
         "error": "#f0524f bold",
     }
