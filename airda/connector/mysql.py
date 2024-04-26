@@ -29,6 +29,7 @@ class MysqlConnector:
                 "user": datasource.username,
                 "password": datasource.password,
                 "host": datasource.host,
+                "port": datasource.port,
                 "database": datasource.database,
             }
         )
