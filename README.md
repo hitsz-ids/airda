@@ -50,7 +50,7 @@ docker run -itd --name mongo -v /{path_of_mongo_data}:/data/db -p 27017:27017 mo
 
 环境变量
 
-下载https://github.com/hitsz-ids/airda/blob/main/.env.template文件,自定义embedding模型,mongo配置,以及openai配置
+下载[.env.template](https://github.com/hitsz-ids/airda/blob/main/.env.template)自定义embedding模型,mongo配置,以及openai配置
 
 ```
 airda env load -p {your_path}/.env_template
@@ -58,7 +58,7 @@ airda env load -p {your_path}/.env_template
 
 日志文件（非必须）
 
-下载https://github.com/hitsz-ids/airda/blob/main/log_config.yml.template文件,自定义日志配置
+下载[log_config.yml.template](https://github.com/hitsz-ids/airda/blob/main/log_config.yml.template),自定义日志配置
 
 ```
 airda log load -p {your_path}/log_config.yml.template
