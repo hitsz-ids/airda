@@ -68,3 +68,4 @@ class MysqlConnector:
                 table_comment=table[1],
             )
             self.context.sync_instruction(instruction)
+        cursor.close()

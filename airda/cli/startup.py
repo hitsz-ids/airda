@@ -18,7 +18,7 @@ from airda.agent.storage import StorageKey
 from airda.agent.storage.entity.datasource import Datasource, Kind
 from airda.agent.storage.repositories.datasource_repository import DatasourceRepository
 from airda.connector.mysql import MysqlConnector
-from airda.server.agent_server import DataAgentServer
+from airda.server.agent_server.airda_server import AirdaServer
 
 style = Style.from_dict(
     {
@@ -108,8 +108,8 @@ def cli(name: str):
     help="服务端口号",
 )
 def server(port: int):
-    data_agent_server = DataAgentServer(port=port)
-    data_agent_server.run_server()
+    airda_server = AirdaServer(port=port)
+    airda_server.run_server()
     pass
 
 
