@@ -10,15 +10,16 @@ from airda.agent.data_agent_context import DataAgentContext
 from airda.agent.exception.already_exists_error import AlreadyExistsError
 from airda.agent.planner.data_agent_planner_params import DataAgentPlannerParams
 from airda.agent.storage import StorageKey
-from airda.agent.storage.entity.datasource import Kind, Datasource
+from airda.agent.storage.entity.datasource import Datasource, Kind
 from airda.agent.storage.repositories.datasource_repository import DatasourceRepository
 from airda.server.api import API
 from airda.server.protocol import (
+    AddDatasourceRequest,
     ChatCompletionRequest,
     ChatCompletionResponseStreamChoice,
     ChatCompletionStreamResponse,
     DeltaMessage,
-    ErrorResponse, AddDatasourceRequest,
+    ErrorResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,9 @@ class APIImpl(API):
             # output_colored_text(f"不支持的数据源类型[{kind}], PS: 支持类型: [{Kind.MYSQL.value}]", "error")
             message = f"不支持的数据源类型[{kind}], PS: 支持类型: [{Kind.MYSQL.value}]"
             return JSONResponse(ErrorResponse(message=message, code=-1).dict())
-        datasource_repository = self.context.get_repository(StorageKey.DATASOURCE).convert(DatasourceRepository)
+        datasource_repository = self.context.get_repository(StorageKey.DATASOURCE).convert(
+            DatasourceRepository
+        )
         try:
             datasource_repository.add(
                 Datasource(
@@ -71,11 +74,11 @@ class APIImpl(API):
 
 
 def make_stream_data(
-        content: str | dict | list,
-        rep_type: str = "stream",
-        model: str = "gpt-4-1106-preview",
-        finish_reason: str = "",
-        session_id: str = "",
+    content: str | dict | list,
+    rep_type: str = "stream",
+    model: str = "gpt-4-1106-preview",
+    finish_reason: str = "",
+    session_id: str = "",
 ):
     push_json = {"type": rep_type, "data": content}
     choice_data = ChatCompletionResponseStreamChoice(

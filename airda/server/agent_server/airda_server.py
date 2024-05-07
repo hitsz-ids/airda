@@ -3,7 +3,7 @@ from overrides import overrides
 
 from airda.server import WebFrameworkServer
 from airda.server.api.api import APIImpl
-from airda.server.protocol import ChatCompletionRequest, AddDatasourceRequest
+from airda.server.protocol import AddDatasourceRequest, ChatCompletionRequest
 
 
 class AirdaServer(WebFrameworkServer):

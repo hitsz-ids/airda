@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from airda.server.protocol import ChatCompletionRequest, AddDatasourceRequest
+from airda.server.protocol import AddDatasourceRequest, ChatCompletionRequest
 
 
 class API(ABC):
