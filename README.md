@@ -50,7 +50,7 @@ docker run -itd --name mongo -v /{path_of_mongo_data}:/data/db -p 27017:27017 mo
 
 环境变量
 
-下载https://github.com/hitsz-ids/airda/blob/main/.env.template文件,自定义embedding模型,mongo配置,以及openai配置
+下载[.env.template](https://github.com/hitsz-ids/airda/blob/main/.env.template)自定义embedding模型,mongo配置,以及openai配置
 
 ```
 airda env load -p {your_path}/.env_template
@@ -58,11 +58,15 @@ airda env load -p {your_path}/.env_template
 
 日志文件（非必须）
 
-下载https://github.com/hitsz-ids/airda/blob/main/log_config.yml.template文件,自定义日志配置
+下载[log_config.yml.template](https://github.com/hitsz-ids/airda/blob/main/log_config.yml.template),自定义日志配置
 
 ```
 airda log load -p {your_path}/log_config.yml.template
 ```
+
+Embedding Model
+
+airda默认使用[stella-large-zh-v2](https://huggingface.co/infgrad/stella-large-zh-v2)模型, 模型默认下载到~/.cache/huggingface/hub/路径,目录下没有需要手动下载
 
 
 
@@ -100,9 +104,8 @@ airda run cli -n {datasource_name}
 
 我们欢迎各种贡献和建议，共同努力，使本项目更上一层楼！麻烦遵循以下步骤：
 
-- **步骤1：** 如果您想添加任何额外的功能、增强功能或在使用过程中遇到任何问题，请发布一个 [问题](https://github.com/hitsz-ids/SQLAgent/issues) 。如果您能遵循 [问题模板](https://github.com/hitsz-ids/SQLAgent/issues/1) 我们将不胜感激。问题将在那里被讨论和分配。
-- **步骤2：** 无论何时，当一个问题被分配后，您都可以按照 [PR模板](https://github.com/hitsz-ids/SQLAgent/pulls) 创建一个 [拉取请求](https://github.com/hitsz-ids/SQLAgent/pulls) 进行贡献。您也可以认领任何公开的问题。共同努力，我们可以使airda变得更好！
+- **步骤1：** 如果您想添加任何额外的功能、增强功能或在使用过程中遇到任何问题，请发布一个 [问题](https://github.com/hitsz-ids/airda/issues) 。如果您能遵循 [问题模板](https://github.com/hitsz-ids/aird/issues/1) 我们将不胜感激。问题将在那里被讨论和分配。
+- **步骤2：** 无论何时，当一个问题被分配后，您都可以按照 [PR模板](https://github.com/hitsz-ids/aird/pulls) 创建一个 [拉取请求](https://github.com/hitsz-ids/aird/pulls) 进行贡献。您也可以认领任何公开的问题。共同努力，我们可以使airda变得更好！
 - **步骤3：** 在审查和讨论后，PR将被合并或迭代。感谢您的贡献！
 
-在您开始之前，我们强烈建议您花一点时间检查 [这里](https://github.com/hitsz-ids/SQLAgent/blob/developing/CONTRIBUTING.md) 再进行贡献。
-
+在您开始之前，我们强烈建议您花一点时间检查 [这里](https://github.com/hitsz-ids/aird/blob/developing/CONTRIBUTING.md) 再进行贡献。

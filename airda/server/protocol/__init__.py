@@ -13,13 +13,17 @@ class ErrorResponse(BaseModel):
 
 class ChatCompletionRequest(BaseModel):
     question: str
-    datasource_id: str
+    datasource_name: str
+
+
+class AddDatasourceRequest(BaseModel):
+    name: str
+    host: str
+    port: int
     database: str
-    knowledge: str
-    session_id: str
-    sql_type: str = "mysql"
-    file_name: str
-    file_id: str
+    kind: str
+    username: str | None
+    password: str | None
 
 
 class DeltaMessage(BaseModel):
