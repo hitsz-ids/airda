@@ -109,3 +109,6 @@ airda run cli -n {datasource_name}
 - **步骤3：** 在审查和讨论后，PR将被合并或迭代。感谢您的贡献！
 
 在您开始之前，我们强烈建议您花一点时间检查 [这里](https://github.com/hitsz-ids/aird/blob/developing/CONTRIBUTING.md) 再进行贡献。
+
+
+
